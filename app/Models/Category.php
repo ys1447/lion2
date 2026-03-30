@@ -15,4 +15,13 @@ class Category extends Model
     public function machines(){
         return $this->hasMany(Machine::class);
     }
+
+    public function inputDatas()
+    {
+        return $this->hasManyThrough(InputData::class, Machine::class);
+    }
+
+    public function fillings(){
+        return $this->hasMany(Filling::class);
+    }
 }

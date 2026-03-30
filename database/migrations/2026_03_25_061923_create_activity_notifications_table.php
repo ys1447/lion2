@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('activity_notifications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->string('user_name'); // Siapa
             $table->string('action');    // Edit / Delete
             $table->string('target');    // Nama Reagent / ID Log

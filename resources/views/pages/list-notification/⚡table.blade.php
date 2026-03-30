@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\Gate;
 
 new class extends Component {
     use WithPagination;
+    public $search = '';
 
     public function render()
     {
         return $this->view([
-            'notifications' => ActivityNotification::latest()->paginate(15),
+            'notifications' => ActivityNotification::query()->with('user')->search($this->search)->latest()->paginate(15),
         ]);
     }
 
@@ -40,6 +41,8 @@ new class extends Component {
     </div>
 
     {{-- Gunakan Template Tabel Kamu --}}
+    <x-loading wire:target='search'/>
+    <x-search model='search' />
     <x-table-data-2 :headers="['Time', 'User', 'Action', 'Target', 'Details']">
         @forelse ($notifications as $notif)
             <tr class="hover:bg-slate-50 transition-colors">

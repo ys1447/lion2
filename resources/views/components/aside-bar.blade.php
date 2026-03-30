@@ -81,13 +81,17 @@
                 </svg>
             </x-aside-bar-items>
 
-            <x-aside-bar-items menu='Reagent Stock' link='/stock-reagent'>
-                <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M19 3v12a7 7 0 11-14 0V3m2 0h10M5 8h14M7 13h10" />
+            <x-aside-bar-items menu='Filling Issues' link='/filling-issues'>
+                <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H15M9 5V9M15 5V9M9 9H15M6 9H18V19C18 20.1046 17.1046 21 16 21H8C6.89543 21 6 20.1046 6 19V9Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13H15" />
                 </svg>
             </x-aside-bar-items>
+
+
+
             <x-aside-bar-items menu='Activity Log' link='/list-notification'>
                 <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor"
                     viewBox="0 0 24 24">
@@ -96,6 +100,17 @@
                 </svg>
             </x-aside-bar-items>
 
+            <x-aside-bar-items menu='Reagent Stock' link='/stock-reagent'>
+                <img src="{{ asset('svg/stock.svg') }}" class="w-5 h-5 shrink-0 transition-colors" alt="Stock Icon">
+            </x-aside-bar-items>
+
+            <x-aside-bar-items menu='MQM' link='/mqm'>
+                <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </x-aside-bar-items>
 
 
 

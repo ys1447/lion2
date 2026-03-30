@@ -16,5 +16,6 @@
         <tbody class="bg-white divide-y divide-slate-100">
             {{ $slot }}
         </tbody>
+        
     </table>
 </div>

@@ -113,4 +113,46 @@ class InputData extends Model
     {
         return $this->hasOne(ReworkLog::class, 'input_data_id')->where('status', 'active');
     }
+
+    public function scopeSearch($query, $term)
+    {
+        if (empty($term)) return $query;
+
+        return $query->where(function ($q) use ($term) {
+            // 1. Cari langsung di kolom batch dan job_number
+            $q->where('batch', 'like', "%{$term}%")
+                ->orWhere('job_number', 'like', "%{$term}%");
+
+            // 2/ variant deleted
+
+            // 3. Cari berdasarkan Nama Job Mixing (lewat job_mixing_id)
+            $q->orWhereHas('jobMixing', function ($queryJob) use ($term) {
+                $queryJob->where('name', 'like', "%{$term}%")
+                    ->orWhere('code_job_mixing', 'like', "%{$term}%");
+            });
+
+            // 4. Cari berdasarkan Nama Mesin (lewat machine_id)
+            $q->orWhereHas('machine', function ($queryMachine) use ($term) {
+                $queryMachine->where('name', 'like', "%{$term}%");
+            });
+        });
+    }
+
+    // Di dalam class InputData
+    public function scopeWithStatus($query, $status)
+    {
+        return $query->when($status, function ($q) use ($status) {
+            // Karena nilai dari <option> akan kita samakan dengan database
+            return $q->where('status', $status);
+        });
+    }
+
+    public function scopeBetweenDates($query, $from, $to)
+    {
+        return $query->when($from && $to, function ($q) use ($from, $to) {
+            // Kita gunakan whereBetween untuk kolom created_at
+            // Kita tambahkan ' 00:00:00' dan ' 23:59:59' agar mencakup seluruh hari
+            return $q->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+        });
+    }
 }

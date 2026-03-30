@@ -24,7 +24,8 @@ new class extends Component {
 
         session()->regenerate();
 
-        return redirect('/dashboard');
+        return redirect('/dashboard')
+    ->with('welcome', auth()->user()->name . "! Have a nice day! 🚀");
     }
 
     public function render()

@@ -16,7 +16,7 @@
     {{-- Input Field --}}
     <input 
         type="text" 
-        wire:model.live.debounce.300ms="{{ $model }}" 
+        wire:model.live.debounce.500ms="{{ $model }}" 
         placeholder="{{ $placeholder }}" 
         class="w-full my-2 pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-sm 
                focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none 

@@ -5,27 +5,42 @@ use Livewire\Attributes\On;
 use App\Models\ReworkLog;
 use Illuminate\Support\Facades\Gate;
 use App\Traits\HasNotification;
+use Livewire\WithPagination;
 
 new class extends Component {
-    use HasNotification;
+    use HasNotification, WithPagination;
     public $showRemixModal = false;
     public $selectedReworkId;
     public $reworkData; // Untuk menampung info batch yang dipilih
 
     // Form Fields
-    public $quantityUsed, $targetBatch, $shift, $notes;
+    public $quantityUsed,
+        $targetBatch,
+        $shift,
+        $notes,
+        $search = '',
+        $filterStatus = '';
+
+    public function updatedFilterStatus()
+    {
+        // Setiap kali ganti filter, balikkan ke halaman 1
+        $this->resetPage();
+    }
 
     #[On('rework-added')]
     public function render()
     {
         return $this->view([
             // Di fungsi render
-            'reworkLogs' => ReworkLog::with([
-                'inputData.variant',
-                'details' => function ($query) {
-                    $query->latest()->limit(1); // Hanya ambil 1 detail terbaru untuk kolom "Last Remix"
-                },
-            ])
+            'reworkLogs' => ReworkLog::query()
+                ->with([
+                    'inputData.variant',
+                    'details' => function ($query) {
+                        $query->latest()->limit(1); // Hanya ambil 1 detail terbaru untuk kolom "Last Remix"
+                    },
+                ])
+                ->search($this->search)
+                ->withStatus($this->filterStatus)
                 ->latest()
                 ->paginate(10),
         ]);
@@ -126,8 +141,15 @@ new class extends Component {
 ?>
 
 <div>
-    <x-loading wire:target='selectForRemix, processRemix, cancel' />
-
+    <x-loading wire:target='selectForRemix, processRemix, cancel, search, filterStatus' />
+    <div class="gap-2 flex">
+        <x-search model='search' />
+        <x-filter model="filterStatus">
+            <option value="">All Status</option>
+            <option value="active">On Remix ⚠️</option>
+            <option value="done">Done ✅</option>
+        </x-filter>
+    </div>
     <x-data-table title="Active Rework & Remix List">
         <x-slot:head>
 

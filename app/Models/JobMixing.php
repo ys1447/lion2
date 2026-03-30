@@ -44,4 +44,13 @@ class JobMixing extends Model
             }
         });
     }
+
+    public function scopeWithIsActive($query, $value)
+    {
+        // Kita gunakan !== '' karena jika value adalah "0" (Inactive), 
+        // empty() akan menganggapnya kosong.
+        return $query->when($value !== '', function ($q) use ($value) {
+            return $q->where('is_active', $value);
+        });
+    }
 }

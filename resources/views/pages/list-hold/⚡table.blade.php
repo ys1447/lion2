@@ -5,11 +5,15 @@ use App\Models\HoldLog;
 use Livewire\Attributes\On; // Tambahkan ini
 use Illuminate\Support\Facades\Gate;
 use App\Traits\HasNotification;
+use Livewire\WithPagination;
 
 new class extends Component {
-    use HasNotification;
+    use HasNotification, WithPagination;
     public $selectedReason = '';
     public $showReasonModal = false;
+    public $search = '';
+
+    public $inputStatusFilter = '';
 
     public function openReason($reason)
     {
@@ -42,12 +46,21 @@ new class extends Component {
         $this->showReasonModal = false;
     }
 
+    public function updatedInputStatusFilter()
+    {
+        // Setiap kali ganti filter, balikkan ke halaman 1
+        $this->resetPage();
+    }
+
     public function render()
     {
         return $this->view([
-            'logs' => HoldLog::with(['inputData', 'user'])
+            'logs' => HoldLog::query()
+                ->with(['inputData', 'user'])
+                ->search($this->search)
+                ->withInputStatus($this->inputStatusFilter)
                 ->latest()
-                ->get(),
+                ->paginate(10),
         ]);
     }
 
@@ -86,14 +99,21 @@ new class extends Component {
 
         $this->sendNotification(action: 'DELETE', target: 'Hold Log: ' . $dataIdentity, details: "Cancelled {$reworkType} for '{$dataIdentity}' and restored status to release");
 
-
         $this->dispatch('alert-success', message: 'Hold dibatalkan dan dikembalikan ke list utama.');
     }
 };
 ?>
 
 <div>
-    <x-loading wire:target='cancel, openReason, releaseHold' />
+    <x-loading wire:target='cancel, openReason, releaseHold, search, inputStatusFilter' />
+    <div class="gap-2 flex">
+        <x-search model='search' />
+        <x-filter model="inputStatusFilter">
+            <option value="">All Status</option>
+            <option value="hold">On Hold ⚠️</option>
+            <option value="releaseHold">Released ✅</option>
+        </x-filter>
+    </div>
     <x-data-table title="Job Mixing List">
         <x-slot:head>
 
@@ -193,6 +213,9 @@ new class extends Component {
         @endforeach
 
     </x-data-table>
+    <div class="mt-4">
+        {{ $logs->links() }}
+    </div>
 
     {{-- Modal untuk melihat alasan lengkap --}}
     <x-modal :show="$showReasonModal" title="Full Hold Reason">

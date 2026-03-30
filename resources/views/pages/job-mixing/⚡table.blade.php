@@ -11,8 +11,15 @@ new class extends Component {
     protected $listeners = ['job-added', 'job-mixing-updated', 'job-mixing-deleted' => '$refresh'];
     
     public $search = '';
+    public $isActiveFilter = '';
     public function updatedSearch()
     {
+        $this->resetPage();
+    }
+
+    public function updatedIsActiveFilter()
+    {
+        // Setiap kali ganti filter, balikkan ke halaman 1
         $this->resetPage();
     }
 
@@ -23,6 +30,7 @@ new class extends Component {
             'jobMixings' => JobMixing::query()
                 ->with('variant') // Eager load agar tidak N+1 query
                 ->search($this->search) 
+                ->withIsActive($this->isActiveFilter)
                 ->latest()
                 ->paginate(10), // Gunakan paginate agar lebih ringan
         ]);
@@ -61,7 +69,15 @@ new class extends Component {
 
 <div>
     {{-- Knowing is not enough; we must apply. Being willing is not enough; we must do. - Leonardo da Vinci --}}
-    <x-search model='search' />
+    <div class="gap-2 flex">
+
+        <x-search model='search' />
+        <x-filter model="isActiveFilter">
+            <option value="">All Status</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+        </x-filter>
+    </div>
     <x-data-table title="Job Mixing List">
         <x-slot:head>
             <th class="px-5 py-3 font-semibold w-16 text-center">No</th>
@@ -153,6 +169,6 @@ new class extends Component {
         {{ $jobMixings->links() }}
     </div>
 
-    <x-loading wire:target="edit, delete" />
+    <x-loading wire:target="edit, delete, search, isActiveFilter" />
 
 </div>

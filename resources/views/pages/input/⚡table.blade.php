@@ -18,6 +18,9 @@ new class extends Component {
     public $selectedBatch;
     public $visibleColumns = [];
 
+    public $search = '';
+    public $filterStatus = '';
+
     public $co_job;
 
     public function mount($variantId)
@@ -64,16 +67,12 @@ new class extends Component {
         $inputVariant = $input->variant->name;
         $inputBatch = $input->batch;
         $jobMixingId = $input->job_mixing_id;
-        
+
         $input->delete();
 
         $this->reSequenceJobNumbers($jobMixingId);
 
-        $this->sendNotification(
-            action: 'DELETE', 
-            target: 'Input Variant: ' . $inputVariant,
-            details: "Delete data batch {$inputBatch} from system"
-        );
+        $this->sendNotification(action: 'DELETE', target: 'Input Variant: ' . $inputVariant, details: "Delete data batch {$inputBatch} from system");
 
         $this->dispatch('alert-success', message: 'Data berhasil dihapus');
     }
@@ -99,11 +98,34 @@ new class extends Component {
         }
     }
 
+    public function updatedFilterStatus()
+    {
+        // Setiap kali ganti filter, balikkan ke halaman 1
+        $this->resetPage();
+    }
+
+    public $fromDate = '';
+    public $toDate = '';
+
+    // Reset halaman jika tanggal diubah
+    public function updatedFromDate()
+    {
+        $this->resetPage();
+    }
+    public function updatedToDate()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         return $this->view([
-            'datas' => InputData::with(['variant', 'user', 'machine', 'machine.category', 'reworkLogs' => fn($q) => $q->where('status', 'active')])
+            'datas' => InputData::query()
+                ->with(['variant', 'user', 'machine', 'machine.category', 'reworkLogs' => fn($q) => $q->where('status', 'active')])
                 ->where('variant_id', $this->variantId)
+                ->search($this->search)
+                ->withStatus($this->filterStatus)
+                ->betweenDates($this->fromDate, $this->toDate)
                 ->latest()
                 ->paginate(15),
         ]);
@@ -214,10 +236,95 @@ new class extends Component {
             'co_job' => !$data->co_job,
         ]);
     }
+
+    public function exportCsv()
+    {
+        $data = InputData::query()
+            ->with(['variant', 'user', 'machine', 'machine.category'])
+            ->where('variant_id', $this->variantId)
+            ->search($this->search)
+            ->withStatus($this->filterStatus)
+            ->betweenDates($this->fromDate, $this->toDate)
+            ->latest()
+            ->get();
+
+        if ($data->isEmpty()) {
+            return session()->flash('error', 'No data to export.');
+        }
+
+        // 1. Definisikan semua kemungkinan kolom dan labelnya
+        $allPossibleColumns = [
+            'created_at' => 'Tanggal Input',
+            'user.name' => 'Inspector',
+            'status' => 'Status',
+            'batch' => 'Batch',
+            'job_number' => 'Job Number',
+            'ph_1' => 'pH 1',
+            'ph_2' => 'pH 2',
+            'ph_3' => 'pH 3',
+            'viscosity_1' => 'Viscosity 1',
+            'viscosity_2' => 'Viscosity 2',
+            'viscosity_3' => 'Viscosity 3',
+            'specific_gravity' => 'SG',
+            'active_ingredient' => 'Active Ingredient',
+            'appearance' => 'Appearance',
+            'odor' => 'Odor',
+            'shift' => 'Shift',
+            'notes' => 'Notes',
+        ];
+
+        // 2. Filter kolom: Hanya ambil kolom yang setidaknya punya 1 baris berisi data (tidak null)
+        $activeColumns = [];
+        foreach ($allPossibleColumns as $key => $label) {
+            // Cek apakah ada minimal satu baris yang kolomnya tidak null/kosong
+            $hasValue = $data->contains(function ($row) use ($key) {
+                $value = data_get($row, $key);
+                return !is_null($value) && $value !== '';
+            });
+
+            if ($hasValue) {
+                $activeColumns[$key] = $label;
+            }
+        }
+
+        // 3. Proses Pembuatan CSV
+        $fileName = 'QC_Export_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$fileName",
+        ];
+
+        $callback = function () use ($data, $activeColumns) {
+            $file = fopen('php://output', 'w');
+
+            // Tulis Header berdasarkan kolom yang aktif saja
+            fputcsv($file, array_values($activeColumns));
+
+            // Tulis Data
+            foreach ($data as $row) {
+                $line = [];
+                foreach ($activeColumns as $key => $label) {
+                    $val = data_get($row, $key);
+
+                    // Formatting khusus untuk tanggal
+                    if ($key === 'created_at') {
+                        $line[] = $val->format('d/m/Y H:i');
+                    } else {
+                        $line[] = $val ?? '-';
+                    }
+                }
+                fputcsv($file, $line);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 };
 ?>
 
 <div>
+
     <x-modal :show="$showReworkModal" title="Setup Rework Batch">
         <div class="space-y-4">
             <div class="p-3 bg-amber-50 rounded-lg border border-amber-100 flex gap-3">
@@ -285,7 +392,51 @@ new class extends Component {
     </x-modal>
 
     <x-loading
-        wire:target="delete, edit, saveHold, confirmHold, cancelHold, cancelRework, saveRework, confirmRework, toggleCoJob" />
+        wire:target="delete, edit, saveHold, confirmHold, cancelHold, cancelRework, saveRework, confirmRework, toggleCoJob, search, filterStatus, fromDate, toDate" />
+
+    <div class="flex gap-2">
+        <x-search model='search' placeholder="Search Batch, Job, or Machine" />
+        <x-filter model="filterStatus">
+            <option value="">All Status</option>
+            <option value="hold">On Hold ⚠️</option>
+            <option value="releaseHold">Released ✅</option>
+        </x-filter>
+        {{-- Date Range --}}
+
+        <x-range fromModel="fromDate" toModel="toDate" />
+
+        {{-- Tombol Reset (Muncul hanya jika ada filter aktif) --}}
+        @if ($search || $filterStatus || $fromDate || $toDate)
+            <button wire:click="$set('search', ''); $set('filterStatus', ''); $set('fromDate', ''); $set('toDate', '')"
+                class="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-colors" title="Clear All Filters">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        @endif
+    </div>
+
+    @if ($search || $filterStatus || $fromDate || $toDate)
+        <button wire:click="exportCsv" wire:loading.attr="disabled"
+            class="flex items-center gap-1 mb-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-bold transition shadow-sm">
+
+            <!-- Ikon Download (Hilang saat loading) -->
+            <svg wire:loading.remove wire:target="exportCsv" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+
+            <!-- Ikon Loading (Muncul saat proses) -->
+            <svg wire:loading wire:target="exportCsv" class="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                </circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+
+            <span class="tracking-tight">EXPORT</span>
+        </button>
+    @endif
 
     <x-data-table title="QC Inspection Data">
         <div class="overflow-x-auto w-full border-t border-slate-100/50">
@@ -360,7 +511,8 @@ new class extends Component {
                             QC Decision
                         </th>
 
-                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left">Inspector
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left">
+                            Inspector
                         </th>
                         <th
                             class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center sticky right-0 bg-white">
@@ -437,7 +589,8 @@ new class extends Component {
                             @endif
 
                             @if (in_array('zpt', $visibleColumns))
-                                <td class="px-4 py-4 text-center font-mono text-slate-600">{{ $data->zpt ?? '-' }}</td>
+                                <td class="px-4 py-4 text-center font-mono text-slate-600">{{ $data->zpt ?? '-' }}
+                                </td>
                             @endif
                             @if (in_array('soap_percentage', $visibleColumns))
                                 <td class="px-4 py-4 text-center font-mono text-slate-600">

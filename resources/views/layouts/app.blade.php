@@ -10,12 +10,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     @livewireStyles
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 
     <style>
         body {
@@ -251,8 +251,31 @@
             });
 
         });
-    </script>
 
+        @if (session()->has('welcome'))
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 10000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: 'success',
+                title: '{{ session('welcome') }}',
+                background: '#ffffff',
+                color: '#1e293b',
+                customClass: {
+                    popup: 'rounded-sm border-l-4 border-indigo-500 shadow-lg',
+                }
+            });
+        @endif
+    </script>
 
 
 </body>

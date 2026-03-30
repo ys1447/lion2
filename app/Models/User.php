@@ -58,4 +58,8 @@ class User extends Authenticatable
     public function inputDatas(){
         return $this->hasMany(InputData::class);
     }
+
+    public function fillings(){
+        return $this->hasMany(Filling::class);
+    }
 }
