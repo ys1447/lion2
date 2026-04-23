@@ -5,6 +5,52 @@ use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 
 new class extends Component {
+    public function exportExcel()
+    {
+        $currentYear = now()->year;
+
+        // 1. Ambil data (Gunakan logic yang sama dengan render)
+        $driver = DB::connection()->getDriverName();
+        $timeShift = $driver === 'sqlite' ? "datetime(created_at, '-6 hours')" : 'DATE_SUB(created_at, INTERVAL 6 HOUR)';
+
+        $categories = Category::with([
+            'variants' => function ($query) use ($currentYear, $timeShift) {
+                $counts = [];
+                for ($m = 1; $m <= 12; $m++) {
+                    $monthStr = str_pad($m, 2, '0', STR_PAD_LEFT);
+                    $counts["inputDatas as month_{$m}_count"] = function ($q) use ($currentYear, $monthStr, $timeShift) {
+                        $q->whereRaw("strftime('%Y', $timeShift) = ?", [(string) $currentYear])->whereRaw("strftime('%m', $timeShift) = ?", [$monthStr]);
+                    };
+                    $counts["inputDatas as month_{$m}_hold"] = function ($q) use ($currentYear, $monthStr, $timeShift) {
+                        $q->whereRaw("strftime('%Y', $timeShift) = ?", [(string) $currentYear])
+                            ->whereRaw("strftime('%m', $timeShift) = ?", [$monthStr])
+                            ->where('status', 'hold');
+                    };
+                    $counts["inputDatas as month_{$m}_rework"] = function ($q) use ($currentYear, $monthStr, $timeShift) {
+                        $q->whereRaw("strftime('%Y', $timeShift) = ?", [(string) $currentYear])
+                            ->whereRaw("strftime('%m', $timeShift) = ?", [$monthStr])
+                            ->where('status', 'rework');
+                    };
+                }
+                $query->withCount($counts);
+            },
+        ])->get();
+
+        $months = [1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'];
+
+        // 2. Render view ke dalam string
+        $html = view('exports.variant-excel-raw', [
+            'categories' => $categories,
+            'months' => $months,
+            'currentYear' => $currentYear,
+        ])->render();
+
+        // 3. Stream download sebagai file .xls
+        return response()->streamDownload(function () use ($html) {
+            echo $html;
+        }, "Report_Production_{$currentYear}.xls");
+    }
+
     public function render()
     {
         $currentYear = now()->year;
@@ -66,6 +112,15 @@ new class extends Component {
 ?>
 
 <div>
+    <button wire:click="exportExcel"
+        class="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-600 rounded-sm hover:bg-emerald-700 transition-all mb-4">
+        {{-- Icon Excel --}}
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
+        </svg>
+        Export Excel
+    </button>
+
     <x-table-data-2 :headers="array_merge(['Category', 'Variant'], $months, ['Release Rate Year'])">
         @foreach ($categories as $category)
             @php
@@ -156,7 +211,8 @@ new class extends Component {
             <tr class="bg-slate-800 text-white font-semibold">
                 {{-- JIKA tidak ada varian, render Category Name di sini --}}
                 @if ($variantCount === 0)
-                    <td class="px-4 py-2 font-bold text-slate-700 bg-white align-middle text-center border border-slate-300">
+                    <td
+                        class="px-4 py-2 font-bold text-slate-700 bg-white align-middle text-center border border-slate-300">
                         {{ $category->name }}
                     </td>
                 @endif

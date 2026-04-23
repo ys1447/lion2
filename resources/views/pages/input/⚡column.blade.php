@@ -17,7 +17,7 @@ new class extends Component {
 
     public function allFields()
     {
-        return ['machine_id', 'batch', 'job_number', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'job_code', 'notes'];
+        return ['one_day', 'machine_id', 'batch', 'job_number', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'job_code', 'notes'];
     }
 
     public function saveSettings()

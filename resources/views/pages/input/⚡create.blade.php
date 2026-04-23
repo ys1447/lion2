@@ -30,6 +30,7 @@ new class extends Component {
     public $prod_date;
     public $job_mixing_id; // Properti untuk menampung pilihan user
     public $machine_id;
+    public $one_day;
 
     public function mount($slug)
     {
@@ -85,7 +86,7 @@ new class extends Component {
 
     public function allFields()
     {
-        return ['batch', 'machine_id', 'job_number', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'job_code', 'notes'];
+        return ['one_day','batch', 'machine_id', 'job_number', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'job_code', 'notes'];
     }
 
     private function determineShift()
@@ -196,63 +197,98 @@ new class extends Component {
 
     public function save()
     {
-        $this->validate([
+        // 1. Tambahkan validasi remix jika checkbox dicentang
+        $rules = [
             'job_mixing_id' => 'required|exists:job_mixings,id',
             'machine_id' => 'required',
-            'batch' => 'required',
-        ]);
+            'batch' => 'required|unique:input_data,batch', // Tambahkan unique agar tidak double input
+        ];
 
-        // Cari data job mixing berdasarkan ID yang dipilih di dropdown
-        $job = JobMixing::find($this->job_mixing_id);
-
-        // Set job_code secara manual sebelum create agar tidak NULL di DB
-        if ($job) {
-            $this->job_code = $job->code_job_mixing;
+        if ($this->useRemix) {
+            $rules['selectedReworkId'] = 'required';
+            $rules['remixWeight'] = 'required|numeric|min:0.01';
         }
 
-        $userId = auth()->user()->getAttributes()['id'];
-        // Eksekusi Create Data
-        InputData::create([
-            'job_mixing_id' => $this->job_mixing_id,
-            'user_id' => $userId, // Pastikan ini mengembalikan angka ID
-            'variant_id' => $this->variant->id, // relasi udah ada di mount
-            'machine_id' => $this->machine_id,
+        $this->validate($rules);
 
-            'batch' => $this->batch,
-            'job_number' => $this->determineJobNumber(),
-            'ph_1' => $this->ph_1,
-            'ph_2' => $this->ph_2,
-            'ph_3' => $this->ph_3,
-            'viscosity_1' => $this->viscosity_1,
-            'viscosity_2' => $this->viscosity_2,
-            'viscosity_3' => $this->viscosity_3,
-            'specific_gravity' => $this->specific_gravity,
-            'active_ingredient' => $this->active_ingredient,
-            'zpt' => $this->zpt,
-            'soap_percentage' => $this->soap_percentage,
-            'rad' => $this->rad,
-            'rgx' => $this->rgx,
-            'rxb' => $this->rxb,
-            'ryc' => $this->ryc,
-            'appearance' => $this->appearance,
-            'odor' => $this->odor,
-            'capacity' => $this->variant->capacity,
-            'shift' => $this->shift,
-            'job_code' => $this->job_code,
-            'notes' => $this->notes,
-        ]);
+        // Gunakan Transaction agar data aman
+        \DB::transaction(function () {
+            $job = JobMixing::find($this->job_mixing_id);
+            if ($job) {
+                $this->job_code = $job->code_job_mixing;
+            }
 
-        // Reset semua field
-        $this->reset(['machine_id', 'batch', 'job_number', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'job_code', 'notes']);
+            $userId = auth()->user()->getAttributes()['id'];
 
-        // Isi ulang batch otomatis untuk input selanjutnya
+            // 2. Eksekusi Create Data Utama
+            $newInput = InputData::create([
+                'job_mixing_id' => $this->job_mixing_id,
+                'user_id' => $userId,
+                'variant_id' => $this->variant->id,
+                'machine_id' => $this->machine_id,
+                'batch' => $this->batch,
+                'job_number' => $this->determineJobNumber(),
+                'ph_1' => $this->ph_1,
+                'ph_2' => $this->ph_2,
+                'ph_3' => $this->ph_3,
+                'viscosity_1' => $this->viscosity_1,
+                'viscosity_2' => $this->viscosity_2,
+                'viscosity_3' => $this->viscosity_3,
+                'specific_gravity' => $this->specific_gravity,
+                'active_ingredient' => $this->active_ingredient,
+                'zpt' => $this->zpt,
+                'soap_percentage' => $this->soap_percentage,
+                'rad' => $this->rad,
+                'rgx' => $this->rgx,
+                'rxb' => $this->rxb,
+                'ryc' => $this->ryc,
+                'appearance' => $this->appearance,
+                'odor' => $this->odor,
+                'capacity' => $this->variant->capacity,
+                'shift' => $this->shift,
+                'job_code' => $this->job_code,
+                'notes' => $this->notes,
+                'oneday' => $this->one_day,
+            ]);
+
+            // 3. LOGIKA REMIX: Potong stok jika checkbox aktif
+            if ($this->useRemix && $this->selectedReworkId) {
+                $reworkLog = \App\Models\ReworkLog::lockForUpdate()->find($this->selectedReworkId);
+
+                // Cek manual stok sekali lagi untuk keamanan
+                if ($this->remixWeight > $reworkLog->current_quantity) {
+                    throw new \Exception('Stok Remix tidak mencukupi!');
+                }
+
+                // Catat Detail Penggunaan
+                $reworkLog->details()->create([
+                    'quantity_used' => $this->remixWeight,
+                    'target_batch_number' => $newInput->batch, // Mengacu ke batch baru yg baru dibuat
+                    'shift' => $this->shift,
+                    'notes' => 'Auto-remix during input data',
+                ]);
+
+                // Kurangi sisa kuota
+                $reworkLog->current_quantity -= $this->remixWeight;
+                if ($reworkLog->current_quantity <= 0) {
+                    $reworkLog->status = 'done';
+                    $reworkLog->current_quantity = 0;
+                }
+                $reworkLog->save();
+            }
+        });
+
+        // 4. Reset Field (Tambahkan variabel remix di sini)
+        $this->reset(['machine_id', 'batch', 'job_number', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'job_code', 'notes', 'useRemix', 'selectedReworkId', 'remixWeight', 'one_day']);
+
+        // Isi ulang batch otomatis
         $this->batch = $this->determineBatch();
         $this->capacity = $this->variant->capacity;
         $this->job_number = $this->determineJobNumber();
 
         $this->dispatch('focus-input');
         $this->dispatch('data-added');
-        $this->dispatch('alert-success', message: 'Data has been saved!');
+        $this->dispatch('alert-success', message: 'Data & Remix info has been saved!');
     }
 
     // Hook ini otomatis terpanggil jika validasi gagal di mana pun (save, update, dll)
@@ -261,6 +297,18 @@ new class extends Component {
         if ($e instanceof \Illuminate\Validation\ValidationException) {
             $this->dispatch('alert-error', message: $e->validator->errors()->first());
         }
+    }
+
+    public $useRemix = false;
+    public $selectedReworkId = null;
+    public $remixWeight = 0;
+
+    public function getAvailableReworksProperty()
+    {
+        return \App\Models\ReworkLog::where('status', 'active')
+            ->where('current_quantity', '>', 0)
+            ->with('inputData.variant') // Asumsi relasi inputData ada di model ReworkLog
+            ->get();
     }
 
     public function render()
@@ -336,6 +384,7 @@ new class extends Component {
                     <x-form-input wire:model='viscosity_3' label="Viscosity 3" forId="viscosity_3" type="number"
                         step="0.01" />
                 @endif
+                
 
 
 
@@ -365,6 +414,15 @@ new class extends Component {
                             Notes
                         </label>
                         <textarea wire:model="notes" id="notes" rows="4"
+                            class="w-full text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 p-2"></textarea>
+                    </div>
+                @endif
+                @if (in_array('one_day', $visibleColumns))
+                    <div class="mt-6">
+                        <label for="1day" class="block text-sm font-medium mb-1">
+                            1 Day
+                        </label>
+                        <textarea wire:model="one_day" id="1day" rows="4" placeholder="pH / visco / sg ..."
                             class="w-full text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 p-2"></textarea>
                     </div>
                 @endif
@@ -401,6 +459,63 @@ new class extends Component {
                 @if (in_array('shift', $visibleColumns))
                     <x-form-input wire:model='shift' label="Shift" forId="shift" />
                 @endif
+
+                <div class="mt-6 p-5 border border-gray-200 rounded-sm bg-gray-50/50">
+                    <!-- Header Section -->
+                    <div class="flex items-center gap-3 pb-3 border-b border-gray-200 mb-4">
+                        <input type="checkbox" wire:model.live="useRemix" id="remixCheck"
+                            class="w-4 h-4 text-indigo-600 rounded-sm border-gray-300 focus:ring-indigo-500 cursor-pointer">
+                        <label for="remixCheck"
+                            class="text-xs font-bold uppercase tracking-wider text-gray-700 cursor-pointer">
+                            Gunakan Bahan Remix?
+                        </label>
+                    </div>
+
+                    @if ($useRemix)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 animate-fadeIn">
+
+                            {{-- Pilih Batch Asal --}}
+                            <div class="my-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">
+                                    Pilih Batch Asal Remix
+                                </label>
+                                <select wire:model.live="selectedReworkId"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white">
+                                    <option value="">-- Pilih Tersedia --</option>
+                                    @foreach ($this->availableReworks as $rw)
+                                        <option value="{{ $rw->id }}">
+                                            {{ $rw->inputData->batch }} | {{ $rw->inputData->variant->name }}
+                                            (Sisa: {{ number_format($rw->current_quantity) }} KG)
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('selectedReworkId')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Berat yang digunakan --}}
+                            <div class="my-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">
+                                    Berat Remix yang Dipakai (KG)
+                                </label>
+                                <input type="number" wire:model="remixWeight"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="0.00">
+                                @error('remixWeight')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                        </div>
+
+                        <div class="mt-2">
+                            <p class="text-[10px] text-gray-400 italic">
+                                *Stok akan otomatis terpotong setelah data disimpan.
+                            </p>
+                        </div>
+                    @endif
+                </div>
 
             </div>
 

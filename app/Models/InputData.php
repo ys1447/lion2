@@ -14,6 +14,7 @@ class InputData extends Model
         'machine_id',
         'batch',
         'job_number',
+        'oneday',
 
 
 
@@ -154,5 +155,59 @@ class InputData extends Model
             // Kita tambahkan ' 00:00:00' dan ' 23:59:59' agar mencakup seluruh hari
             return $q->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
         });
+    }
+
+    // App\Models\InputData.php
+
+    public function isOutSpec($fieldName)
+    {
+        $value = $this->$fieldName;
+
+        // SOLUSI: Jika null ATAU string kosong ATAU hanya berisi spasi, abaikan (bukan OOS)
+        if (is_null($value) || trim((string)$value) === '') {
+            return false;
+        }
+
+        $standard = $this->variant->standards->where('field_name', $fieldName)->first();
+
+        if (!$standard) return false;
+
+        $val = (float) $value;
+        $min = $standard->min_value;
+        $max = $standard->max_value;
+
+        // Pengecekan range
+        $isTooLow = (!is_null($min) && $val < (float)$min);
+        $isTooHigh = (!is_null($max) && $val > (float)$max);
+
+        return $isTooLow || $isTooHigh;
+    }
+
+    /**
+     * Cek apakah ada salah satu field teknis yang outspec dalam satu baris
+     */
+    public function hasAnyOutSpec()
+    {
+        $fieldsToCheck = [
+            'ph_1',
+            'ph_2',
+            'ph_3',
+            'viscosity_1',
+            'viscosity_2',
+            'viscosity_3',
+            'specific_gravity',
+            'active_ingredient',
+            'zpt',
+            'soap_percentage'
+        ];
+
+        foreach ($fieldsToCheck as $field) {
+            // Method ini sekarang sudah pintar membedakan mana isi beneran vs empty string
+            if ($this->isOutSpec($field)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

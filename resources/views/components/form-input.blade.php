@@ -20,7 +20,7 @@
         placeholder="{{ $placeholder }}"
     />
 
-    @if ($error)
-        <p class="text-red-500 text-xs mt-1">{{ $error }}</p>
-    @endif
+    @error($attributes->get('wire:model'))
+        <span class="text-[10px] text-red-600 font-medium">{{ $message }}</span>
+    @enderror
 </div>

@@ -3,10 +3,11 @@
 use Livewire\Component;
 use App\Models\Variant;
 use Livewire\Attributes\On;
+use Livewire\WithPagination;
 use App\Traits\HasNotification;
 
 new class extends Component {
-    use HasNotification;
+    use HasNotification, WithPagination;
     protected $listeners = ['variant-added', 'variant-updated', 'variant-deleted' => '$refresh'];
 
     public function edit($id)
@@ -17,7 +18,7 @@ new class extends Component {
     public function render()
     {
         return $this->view([
-            'variants' => Variant::with('category')->get(),
+            'variants' => Variant::with('category')->paginate(10),
         ]);
     }
 
@@ -96,5 +97,8 @@ new class extends Component {
             </tr>
         @endforeach
     </x-data-table>
+    <div class="mt-4 px-5">
+        {{ $variants->links() }}
+    </div>
     <x-loading wire:target="edit, delete" />
 </div>

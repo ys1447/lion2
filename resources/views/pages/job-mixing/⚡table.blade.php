@@ -9,7 +9,7 @@ use Livewire\WithPagination;
 new class extends Component {
     use HasNotification, WithPagination;
     protected $listeners = ['job-added', 'job-mixing-updated', 'job-mixing-deleted' => '$refresh'];
-    
+
     public $search = '';
     public $isActiveFilter = '';
     public function updatedSearch()
@@ -29,14 +29,15 @@ new class extends Component {
             // 5. Ubah JobMixing::all() menjadi query dengan search scope
             'jobMixings' => JobMixing::query()
                 ->with('variant') // Eager load agar tidak N+1 query
-                ->search($this->search) 
+                ->search($this->search)
                 ->withIsActive($this->isActiveFilter)
                 ->latest()
                 ->paginate(10), // Gunakan paginate agar lebih ringan
         ]);
     }
 
-    public function edit($id){
+    public function edit($id)
+    {
         $this->dispatch('edit-job-mixing', id: $id);
     }
 
@@ -55,15 +56,17 @@ new class extends Component {
         $jobs = JobMixing::findOrFail($id);
         $jobName = $jobs->name;
         $jobs->delete();
-        $this->sendNotification(
-            action: 'DELETE', 
-            target: 'Job: ' . $jobName,
-            details: "Job Mixing '{$jobName}' **has been deleted**"
-        );
+        $this->sendNotification(action: 'DELETE', target: 'Job: ' . $jobName, details: "Job Mixing '{$jobName}' **has been deleted**");
         $this->dispatch('alert-success', message: 'Data berhasil dihapus');
     }
 
-    
+    public function printFile($id)
+    {
+        $job = JobMixing::findOrFail($id);
+        if ($job->file_path) {
+            $this->dispatch('print-pdf', url: Storage::url($job->file_path));
+        }
+    }
 };
 ?>
 
@@ -92,6 +95,7 @@ new class extends Component {
             <th class="px-5 py-3 font-semibold">Status</th>
             <th class="px-5 py-3 font-semibold">Created</th>
             <th class="px-5 py-3 font-semibold text-right">Action</th>
+            <th class="px-5 py-3 font-semibold text-center">Document</th>
         </x-slot:head>
 
         @foreach ($jobMixings as $i => $job)
@@ -104,9 +108,10 @@ new class extends Component {
                 <td class="px-5 py-3">
                     <span class="font-medium text-slate-700">{{ $job->name }}</span>
                 </td>
-                
+
                 <td class="px-5 py-3">
-                    <span class="text-xs px-2 py-1 rounded-sm bg-amber-100 text-amber-800">{{ $job->variant->name }}</span>
+                    <span
+                        class="text-xs px-2 py-1 rounded-sm bg-amber-100 text-amber-800">{{ $job->variant->name }}</span>
                 </td>
 
                 <td class="px-5 py-3 text-slate-600">
@@ -159,6 +164,24 @@ new class extends Component {
                         class="text-red-600 hover:text-red-900 cursor-pointer">
                         <x-delete-svg />
                     </span>
+                </td>
+
+                <td class="px-5 py-3 text-center">
+                    @if ($job->file_path)
+                        <a href="{{ Storage::url($job->file_path) }}" target="_blank" title="Print/View Document"
+                            class="inline-flex items-center justify-center p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600 transition-all group">
+
+                            {{-- Icon Print --}}
+                            <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 9V4a1 1 0 011-1h10a1 1 0 011 1v5M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1M6 14h12v7H6v-7z" />
+                            </svg>
+
+                        </a>
+                    @else
+                        <span class="text-[10px] text-slate-400 italic">No File</span>
+                    @endif
                 </td>
 
             </tr>

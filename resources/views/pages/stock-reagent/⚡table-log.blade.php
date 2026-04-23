@@ -164,12 +164,27 @@ new class extends Component {
             Current Reagent Inventory
         </h3>
 
-        <x-table-data-2 :headers="['Reagent Name', 'Initial', 'Incoming', 'Usage', 'Current Stock', 'Min Stock', 'Status', 'Action']">
+        <x-table-data-2 :headers="[
+            'Reagent Name',
+            'Tare (Bottle)',
+            'Initial',
+            'Incoming',
+            'Usage',
+            'Current Stock',
+            'Min Stock',
+            'Status',
+            'Action',
+        ]">
             @foreach ($reagents as $item)
                 <tr class="hover:bg-slate-50 transition-colors">
                     {{-- Nama Reagent --}}
                     <td class="px-4 py-3 font-semibold text-slate-700">
                         {{ $item->name }}
+                    </td>
+
+                    {{-- Kolom Baru: Berat Botol Kosong --}}
+                    <td class="px-4 py-3 text-amber-600 font-mono text-xs">
+                        {{ number_format($item->empty_bottle_weight) }} <span class="text-[10px]">g</span>
                     </td>
 
                     {{-- Stok Awal --}}

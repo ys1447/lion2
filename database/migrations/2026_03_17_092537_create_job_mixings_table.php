@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('no_ftd');
             $table->string('no_revisi');
             $table->boolean('is_active')->default(true);
+            $table->string('file_path')->nullable();
             $table->timestamps();
         });
     }

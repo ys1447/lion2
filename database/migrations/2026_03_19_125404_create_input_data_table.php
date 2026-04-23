@@ -42,6 +42,10 @@ return new class extends Migration
             $table->decimal('zpt', 6, 2)->nullable();
             $table->decimal('soap_percentage', 5, 2)->nullable();
 
+            // 1D
+            $table->text('oneday')->nullable();
+
+
             // Chemical adjustments
             $table->decimal('rad', 6, 2)->nullable();
             $table->decimal('rgx', 6, 2)->nullable();

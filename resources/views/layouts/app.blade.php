@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{{ $title ?? config('app.name') }}</title>
-
+    <link rel="icon"
+        href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAAAAB3u9SAAAAAnRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN798zQAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAA0SURBVAjXY2SgCHACInYGCpAEYSADpIEMkAYyQBrIQInh/38wA6SBDJAGMkAayABpIAMDgwAAsmILmS6S998AAAAASUVORK5CYII=">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -113,6 +114,32 @@
 
 
     @livewireScripts
+
+    <script data-navigate-once>
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+    </script>
+
+
+    <script>
+        window.addEventListener('print-pdf', event => {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = event.detail.url;
+            document.body.appendChild(iframe);
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        });
+    </script>
+
+
 
     {{-- Autofocus form --}}
     <script>

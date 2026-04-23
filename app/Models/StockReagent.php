@@ -12,7 +12,8 @@ class StockReagent extends Model
         'total_incoming',
         'total_usage',
         'current_stock',
-        'min_stock'
+        'min_stock',
+        'empty_bottle_weight'
     ];
 
     /**

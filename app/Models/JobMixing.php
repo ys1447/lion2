@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class JobMixing extends Model
 {
-    protected $fillable = ['job_mixing_id', 'variant_id', 'name', 'type', 'code_job_mixing', 'capacity', 'no_document', 'no_ftd', 'no_revisi', 'is_active'];
+    protected $fillable = ['job_mixing_id', 'variant_id', 'name', 'type', 'code_job_mixing', 'capacity', 'no_document', 'no_ftd', 'no_revisi', 'is_active', 'file_path'];
 
     public function inputDatas()
     {

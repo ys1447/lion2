@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('total_incoming')->default(0); // Total kumulatif stok masuk
             $table->integer('total_usage')->default(0);    // Total kumulatif pemakaian
             $table->integer('current_stock')->default(0);  // Sisa stok saat ini (Final)
+            $table->decimal('empty_bottle_weight', 8, 2)->default(0);
 
             $table->integer('min_stock');    // Batas minimal untuk alert
             $table->timestamps();

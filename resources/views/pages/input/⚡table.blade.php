@@ -43,7 +43,7 @@ new class extends Component {
 
     public function allFields()
     {
-        return ['machine_id', 'batch', 'job_number', 'job_code', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'notes'];
+        return ['machine_id', 'batch', 'job_number', 'job_code', 'ph_1', 'ph_2', 'ph_3', 'viscosity_1', 'viscosity_2', 'viscosity_3', 'specific_gravity', 'active_ingredient', 'zpt', 'soap_percentage', 'rad', 'rgx', 'rxb', 'ryc', 'appearance', 'odor', 'capacity', 'shift', 'notes', 'one_day'];
     }
 
     public function edit($id)
@@ -121,7 +121,7 @@ new class extends Component {
     {
         return $this->view([
             'datas' => InputData::query()
-                ->with(['variant', 'user', 'machine', 'machine.category', 'reworkLogs' => fn($q) => $q->where('status', 'active')])
+                ->with(['variant.standards', 'variant', 'user', 'machine', 'machine.category', 'reworkLogs' => fn($q) => $q->where('status', 'active')])
                 ->where('variant_id', $this->variantId)
                 ->search($this->search)
                 ->withStatus($this->filterStatus)
@@ -271,6 +271,7 @@ new class extends Component {
             'odor' => 'Odor',
             'shift' => 'Shift',
             'notes' => 'Notes',
+            'oneday' => '1 Day',
         ];
 
         // 2. Filter kolom: Hanya ambil kolom yang setidaknya punya 1 baris berisi data (tidak null)
@@ -320,10 +321,78 @@ new class extends Component {
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public $showOneDayModal = false;
+    public $oneDayValue;
+
+    public function openOneDayModal($id)
+    {
+        $data = InputData::findOrFail($id);
+
+        $this->selectedId = $id;
+        $this->oneDayValue = $data->oneday;
+        $this->showOneDayModal = true;
+    }
+
+    public function saveOneDay()
+    {
+        $this->validate([
+            'oneDayValue' => 'nullable|max:25',
+        ]);
+
+        InputData::findOrFail($this->selectedId)->update(['oneday' => $this->oneDayValue]);
+
+        $this->showOneDayModal = false;
+    }
+
+    public function cancelModal1D()
+    {
+        $this->showOneDayModal = false;
+        // Reset data agar bersih saat modal dibuka lagi nanti
+        $this->reset(['oneDayValue']);
+
+        // Opsional: Hapus pesan error validasi (jika ada)
+        $this->resetValidation();
+    }
 };
 ?>
 
 <div>
+
+    <x-loading
+        wire:target="openOneDayModal,saveOneDay,cancelModal1D ,delete, edit, saveHold, confirmHold, cancelHold, cancelRework, saveRework, confirmRework, toggleCoJob, search, filterStatus, fromDate, toDate" />
+
+    <x-modal :show="$showOneDayModal" title="Input One Day">
+        <div class="space-y-4">
+
+            <div>
+                <label for="oneday" class="block text-sm font-medium text-slate-700 mb-1">
+                    1 Day Notes
+                </label>
+
+                <textarea wire:model="oneDayValue" id="oneday" rows="4" placeholder="pH / visco / sg ..."
+                    class="w-full text-sm border border-slate-200 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 p-2"></textarea>
+
+                @error('oneDayValue')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button wire:click="cancelModal1D"
+                    class="px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100 rounded">
+                    Cancel
+                </button>
+
+                <button wire:click="saveOneDay"
+                    class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                    Save
+                </button>
+            </div>
+
+        </div>
+    </x-modal>
 
     <x-modal :show="$showReworkModal" title="Setup Rework Batch">
         <div class="space-y-4">
@@ -391,8 +460,7 @@ new class extends Component {
         </div>
     </x-modal>
 
-    <x-loading
-        wire:target="delete, edit, saveHold, confirmHold, cancelHold, cancelRework, saveRework, confirmRework, toggleCoJob, search, filterStatus, fromDate, toDate" />
+
 
     <div class="flex gap-2">
         <x-search model='search' placeholder="Search Batch, Job, or Machine" />
@@ -440,10 +508,11 @@ new class extends Component {
 
     <x-data-table title="QC Inspection Data">
         <div class="overflow-x-auto w-full border-t border-slate-100/50">
-            <table class="min-w-full border-separate border-spacing-0 text-xs">
+            <table class="w-full min-w-max table-auto border-separate border-spacing-0 text-xs">
                 <thead class="bg-slate-50/80 sticky top-0 z-10">
                     <tr>
-                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center w-12">No
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center w-12">
+                            No
                         </th>
 
                         {{-- Group: Production --}}
@@ -467,6 +536,8 @@ new class extends Component {
                                 Viscosity</th>
                         @endif
 
+
+
                         @if (in_array('specific_gravity', $visibleColumns))
                             <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">SG
                             </th>
@@ -476,12 +547,18 @@ new class extends Component {
                             </th>
                         @endif
                         @if (in_array('zpt', $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">ZPT
+                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
+                                ZPT
                             </th>
                         @endif
                         @if (in_array('soap_percentage', $visibleColumns))
                             <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
                                 Soap</th>
+                        @endif
+
+                        @if (in_array('one_day', $visibleColumns))
+                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">1D
+                            </th>
                         @endif
 
                         {{-- Group: Adjustment --}}
@@ -522,7 +599,7 @@ new class extends Component {
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($datas as $i => $data)
                         <tr wire:key="data-{{ $data->id }}"
-                            class="hover:bg-slate-50 transition-all duration-200 {{ $data->status === 'hold' ? 'bg-red-100 hover:bg-red-200 border-l-4 border-l-red-500' : 'hover:bg-slate-50' }} ">
+                            class="hover:bg-slate-50 transition-all duration-200 {{ $data->status === 'hold' ? 'bg-red-100 hover:bg-red-200 border-l-4 border-l-red-500' : 'hover:bg-slate-50' }} {{-- Tambahan: Jika Ada Data Out Spec (OOS) tapi tidak di-hold, beri warna oranye muda/merah tipis --}} {{ $data->status !== 'hold' && $data->hasAnyOutSpec() ? 'bg-orange-50 border-l-4 border-l-orange-400' : '' }}">
 
                             <td class="px-4 py-4 text-center text-slate-400 font-medium italic">
                                 {{ ($datas->currentPage() - 1) * $datas->perPage() + $loop->iteration }}</td>
@@ -549,19 +626,24 @@ new class extends Component {
                                 </td>
                             @endif
 
+
                             {{-- Col: pH --}}
-                            @if (array_intersect(['ph_1', 'ph_2', 'ph_3'], $visibleColumns))
-                                <td class="px-4 py-4 bg-blue-50/10">
-                                    <div class="flex items-center gap-1.5">
-                                        @foreach (['ph_1', 'ph_2', 'ph_3'] as $field)
-                                            @if ($data->$field && in_array($field, $visibleColumns))
-                                                <span
-                                                    class="bg-white border border-blue-100 text-blue-700 px-2 py-1 rounded shadow-sm font-mono font-bold">{{ $data->$field }}</span>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </td>
-                            @endif
+                            <td class="px-4 py-4 bg-blue-50/10">
+                                <div class="flex items-center gap-1.5">
+                                    @foreach (['ph_1', 'ph_2', 'ph_3'] as $field)
+                                        @if ($data->$field && in_array($field, $visibleColumns))
+                                            <span
+                                                class="px-2 py-1 rounded shadow-sm font-mono font-bold border 
+                                                {{-- Logika Merah jika OOS --}}
+                                                {{ $data->isOutSpec($field)
+                                                    ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                                    : 'bg-white border-blue-100 text-blue-700' }}">
+                                                {{ $data->$field }}
+                                            </span>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </td>
 
                             {{-- Col: Viscosity --}}
                             @if (array_intersect(['viscosity_1', 'viscosity_2', 'viscosity_3'], $visibleColumns))
@@ -570,7 +652,11 @@ new class extends Component {
                                         @foreach (['viscosity_1', 'viscosity_2', 'viscosity_3'] as $field)
                                             @if ($data->$field && in_array($field, $visibleColumns))
                                                 <span
-                                                    class="bg-white border border-emerald-100 text-emerald-700 px-2 py-1 rounded shadow-sm font-mono font-bold">
+                                                    class="px-2 py-1 rounded shadow-sm font-mono font-bold border transition-all duration-300
+                                                    {{ $data->isOutSpec($field)
+                                                        ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                                        : 'bg-white border-emerald-100 text-emerald-700' }}">
+
                                                     {{ number_format((float) $data->$field, 0, ',', '.') }}
                                                 </span>
                                             @endif
@@ -579,22 +665,53 @@ new class extends Component {
                                 </td>
                             @endif
 
+
+
                             @if (in_array('specific_gravity', $visibleColumns))
-                                <td class="px-4 py-4 text-center font-mono text-slate-600">
-                                    {{ $data->specific_gravity ?? '-' }}</td>
+                                <td
+                                    class="px-4 py-4 text-center font-mono 
+                                    {{ $data->isOutSpec('specific_gravity')
+                                        ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                        : 'text-slate-600' }}">
+                                    {{ $data->specific_gravity ?? '-' }}
+                                </td>
                             @endif
+
                             @if (in_array('active_ingredient', $visibleColumns))
-                                <td class="px-4 py-4 text-center font-mono text-slate-600">
+                                <td
+                                    class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('active_ingredient')
+                                        ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                        : 'text-slate-600' }}">
                                     {{ $data->active_ingredient ?? '-' }}</td>
                             @endif
 
                             @if (in_array('zpt', $visibleColumns))
-                                <td class="px-4 py-4 text-center font-mono text-slate-600">{{ $data->zpt ?? '-' }}
+                                <td
+                                    class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('zpt') ? 'bg-red-600 text-white border-red-700 animate-pulse' : 'text-slate-600' }}">
+                                    {{ $data->zpt ?? '-' }}
                                 </td>
                             @endif
                             @if (in_array('soap_percentage', $visibleColumns))
-                                <td class="px-4 py-4 text-center font-mono text-slate-600">
+                                <td
+                                    class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('soap_percentage')
+                                        ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                                        : 'text-slate-600' }}">
                                     {{ $data->soap_percentage ?? '-' }}</td>
+                            @endif
+
+                            @if (in_array('one_day', $visibleColumns))
+                                <td class="px-4 py-4 text-center font-mono text-slate-600 w-32">
+
+                                    <button wire:click="openOneDayModal({{ $data->id }})"
+                                        class="px-2 py-1 text-[10px] rounded-sm transition-all duration-150 cursor-pointer {{ $data->oneday ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm' }}">
+                                        {{ $data->oneday ? 'Edit' : 'Input' }}
+                                    </button>
+
+                                    <div class="mt-1 text-[10px] text-slate-500 italic">
+                                        {{ $data->oneday }}
+                                    </div>
+
+                                </td>
                             @endif
 
                             {{-- Col: Adjustment --}}
@@ -718,7 +835,7 @@ new class extends Component {
 
                             {{-- Actions (Always Visible) --}}
                             <td
-                                class="px-4 py-4 sticky right-0 bg-white/95 backdrop-blur-sm shadow-l {{ $data->status === 'hold' ? 'border-l-4 border-l-red-500' : '' }}">
+                                class="px-4 py-4 sticky right-0 bg-white/95 backdrop-blur-sm border-l-2 border-slate-100 {{ $data->status === 'hold' ? 'border-l-4 border-l-red-500' : '' }}">
                                 <div class="flex items-center justify-center">
                                     {{-- Button CO Job (Disamakan ukurannya dengan Edit/Delete) --}}
                                     <button wire:click="toggleCoJob({{ $data->id }})"

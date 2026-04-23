@@ -3,10 +3,13 @@
 use Livewire\Component;
 use App\Models\Variant;
 use App\Models\JobMixing;
+use Livewire\WithFileUploads;
 
 new class extends Component {
+    use WithFileUploads;
+
     public $name = '';
-    public $variant_id = '';   
+    public $variant_id = '';
     public $type = true;
     public $code_job_mixing = '';
     public $capacity = '';
@@ -14,6 +17,7 @@ new class extends Component {
     public $no_ftd = '';
     public $no_revisi = '';
     public $is_active = true;
+    public $file_pdf;
 
     public function save()
     {
@@ -26,10 +30,18 @@ new class extends Component {
             'no_document' => 'required|string|max:100',
             'no_ftd' => 'required|string|max:100',
             'no_revisi' => 'required|string|max:50',
+            'file_pdf' => 'nullable|mimes:pdf|max:2048',
 
             // is active sementara nullable soalnya blm relasi
             'is_active' => 'nullable',
         ]);
+
+        $filePath = null;
+        if ($this->file_pdf) {
+            // Simpan ke folder 'job_mixing_files' di disk 'public'
+            $filePath = $this->file_pdf->store('job_mixing_files', 'public');
+        }
+
 
         JobMixing::create([
             'variant_id' => $this->variant_id,
@@ -41,6 +53,7 @@ new class extends Component {
             'no_ftd' => $this->no_ftd,
             'no_revisi' => $this->no_revisi,
             'is_active' => $this->is_active,
+            'file_path' => $filePath,
         ]);
 
         $this->reset();
@@ -48,12 +61,12 @@ new class extends Component {
         $this->dispatch('alert-success', message: 'Data berhasil ditambahkan');
     }
 
-    public function render(){
+    public function render()
+    {
         return $this->view([
             'variantOptions' => Variant::orderBy('name')->pluck('name', 'id'),
         ]);
     }
-
 };
 ?>
 
@@ -81,6 +94,14 @@ new class extends Component {
                 '0' => 'Terkendali',
             ]" />
             <x-select-form label="Target Variant" model="variant_id" :options="$variantOptions" />
+            <x-form-input wire:model="file_pdf" type="file" label="Upload Document (PDF, Max 2MB)" forId="file_pdf"
+                :error="$errors->first('file_pdf')"
+                class="file:mr-4 file:py-1 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+
+            {{-- Progress Loading (Opsional tapi sangat disarankan untuk File Upload) --}}
+            <div wire:loading wire:target="file_pdf" class="text-[10px] text-indigo-600 mb-4 italic animate-pulse">
+                Sistem sedang memproses file, mohon tunggu...
+            </div>
             <x-button type="submit"> Create New Job </x-button>
         </form>
     </div>

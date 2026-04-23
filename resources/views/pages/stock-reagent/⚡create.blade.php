@@ -4,9 +4,8 @@ use Livewire\Component;
 use App\Models\StockReagent;
 
 new class extends Component {
-
     // Properti Stock Reagent
-    public $name, $initial_stock, $min_stock;
+    public $name, $initial_stock, $min_stock, $empty_bottle_weight;
 
     public $isCreateOpen = false;
 
@@ -35,18 +34,21 @@ new class extends Component {
             'name' => 'required|min:3',
             'initial_stock' => 'required|numeric|min:0',
             'min_stock' => 'required|numeric|min:0',
+            'empty_bottle_weight' => 'required|numeric|min:0',
         ]);
 
         StockReagent::create([
             'name' => $this->name,
             'initial_stock' => $this->initial_stock,
             'min_stock' => $this->min_stock,
+            'empty_bottle_weight' => $this->empty_bottle_weight,
             // total_incoming & usage otomatis 0 dari migrasi
             // current_stock otomatis dihitung oleh Model Booted
         ]);
         $this->dispatch('alert-success', message: 'New Reagent added successfully!');
         $this->dispatch('reagent-added');
         $this->isCreateOpen = false;
+        $this->reset(['name', 'initial_stock', 'min_stock', 'empty_bottle_weight']);
     }
 
     // --- Logic Add Incoming Stock ---
@@ -83,7 +85,8 @@ new class extends Component {
         $this->dispatch('data-added');
     }
 
-    public function cancelIncoming(){
+    public function cancelIncoming()
+    {
         $this->isAddStockOpen = false;
     }
 
@@ -94,7 +97,8 @@ new class extends Component {
         $this->isUseStockOpen = true;
     }
 
-    public function cancelUseStock(){
+    public function cancelUseStock()
+    {
         $this->isUseStockOpen = false;
     }
 
@@ -105,7 +109,9 @@ new class extends Component {
         $this->validate([
             'selectedReagentId' => 'required|exists:stock_reagents,id',
             'usageAmount' => [
-                'required', 'numeric', 'min:1',
+                'required',
+                'numeric',
+                'min:1',
                 // Validasi agar tidak memakai lebih dari stok yang ada
                 function ($attribute, $value, $fail) use ($reagent) {
                     if ($reagent && $value > $reagent->current_stock) {
@@ -144,7 +150,8 @@ new class extends Component {
 
 <div>
 
-    <x-loading wire:target="save, openModal, cancel, cancelIncoming, openAddStock, updateStock,openUseStock, cancelUseStock, useStock  " />
+    <x-loading
+        wire:target="save, openModal, cancel, cancelIncoming, openAddStock, updateStock,openUseStock, cancelUseStock, useStock  " />
 
     <x-modal :show="$isCreateOpen" title="Add New Reagent Stock">
         <form wire:submit.prevent="save" class="space-y-4">
@@ -161,6 +168,13 @@ new class extends Component {
                 {{-- Alert Threshold --}}
                 <x-form-input label="Min. Alert (ML)" forId="min_stock" type="number" wire:model="min_stock"
                     placeholder="100" :error="$errors->first('min_stock')" />
+            </div>
+
+            {{-- Input Berat Botol Kosong --}}
+            <div class="grid grid-cols-1">
+                <x-form-input label="Empty Bottle Weight (Gram)" forId="empty_weight" type="number"
+                    wire:model="empty_bottle_weight" placeholder="e.g. 50" :error="$errors->first('empty_bottle_weight')"
+                    helpText="Digunakan untuk memudahkan perhitungan stok via timbangan." />
             </div>
 
             {{-- Action Buttons --}}
@@ -224,7 +238,9 @@ new class extends Component {
                         </option>
                     @endforeach
                 </select>
-                @error('selectedReagentId') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                @error('selectedReagentId')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <x-form-input label="Usage Amount (ML)" forId="use_amount" type="number" wire:model="usageAmount"
@@ -255,12 +271,13 @@ new class extends Component {
             </svg>
         </x-plus-svg>
         <x-plus-svg wire:click="openUseStock" color="rose" label="Use Reagent">
-            <svg class="w-4 h-4 rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <svg class="w-4 h-4 rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
         </x-plus-svg>
-        
+
     </div>
 
-    
+
 </div>
