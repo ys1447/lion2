@@ -201,7 +201,7 @@ new class extends Component {
         $rules = [
             'job_mixing_id' => 'required|exists:job_mixings,id',
             'machine_id' => 'required',
-            'batch' => 'required|unique:input_data,batch', // Tambahkan unique agar tidak double input
+            'batch' => 'required', // Tambahkan unique agar tidak double input
         ];
 
         if ($this->useRemix) {

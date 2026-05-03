@@ -12,6 +12,5 @@ Route::livewire('/list-notification', 'pages::list-notification.index')->middlew
 Route::livewire('/stock-reagent', 'pages::stock-reagent.index')->middleware('auth');
 Route::livewire('/filling-issues', 'pages::filling-issues.index')->middleware('auth');
 Route::livewire('/mqm', 'pages::mqm.index')->middleware('auth');
-Route::livewire('/input-data/{slug}', 'pages::input.index')->middleware('auth');
-
+Route::livewire('/input-data/{slug}', 'pages::input.index')->middleware('auth')->name('input.data');
 Route::livewire('/login', 'pages::auth.login')->middleware('guest')->name('login');

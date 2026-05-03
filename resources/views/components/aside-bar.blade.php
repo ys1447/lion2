@@ -1,4 +1,5 @@
 <div>
+   
     <!-- An unexamined life is not worth living. - Socrates -->
     <aside x-transition:enter="transition ease-in-out duration-300 transform" x-transition:enter-start="-translate-x-full"
         x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-300 transform"
@@ -29,13 +30,13 @@
             </x-aside-bar-items>
 
             @if (auth()->user()->role === 'admin')
-                <x-aside-bar-items menu='Users' link='/users'>
-                    <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </x-aside-bar-items>
+            <x-aside-bar-items menu='Users' link='/users'>
+                <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </x-aside-bar-items>
             @endif
 
             <x-aside-bar-items menu='Manage' link='/manage'>

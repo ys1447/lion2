@@ -38,14 +38,14 @@ new class extends Component {
             $this->dispatch('alert-error', message: 'Anda tidak memiliki akses untuk menghapus!');
             return;
         }
-        
+
         $variant = Variant::findOrFail($id);
         $variantName = $variant->name;
         $variant->delete();
 
 
         $this->sendNotification(
-            action: 'DELETE', 
+            action: 'DELETE',
             target: 'Variant: ' . $variantName,
             details: "Delete variant {$variantName} from system"
         );
@@ -69,32 +69,35 @@ new class extends Component {
         </x-slot:head>
 
         @foreach ($variants as $i => $variant)
-            <tr wire:key="variant-{{ $variant->id }}" class="hover:bg-slate-50 transition-colors align-middle">
-                <td class="px-5 py-3 text-center text-slate-500 font-medium">{{ $i + 1 }}</td>
-                <td class="px-5 py-3">
-                    <span class="font-medium text-slate-700">{{ $variant->name }}</span>
-                </td>
-                <td class="px-5 py-3">
-                    <span class="font-medium text-slate-700">{{ $variant->capacity }}</span>
-                </td>
-                <td class="px-5 py-3">
-                    <span class="font-medium text-slate-700">{{ $variant->slug }}</span>
-                </td>
-                <td class="px-5 py-3">
-                    <span class="font-medium text-slate-700">{{ $variant->category->name }}</span>
-                </td>
-                <td class="px-5 py-3 text-slate-500">{{ $variant->created_at->diffForHumans() }}</td>
-                <td class="px-5 py-3 text-right flex items-center">
-                    <span wire:click="edit({{ $variant->id }})"
-                        class="text-indigo-600 hover:text-indigo-900 mr-2 cursor-pointer">
-                        <x-edit-svg />
-                    </span>
-                    <span wire:click="confirm_delete({{ $variant->id }})"
-                        class="text-red-600 hover:text-red-900 cursor-pointer">
-                        <x-delete-svg />
-                    </span>
-                </td>
-            </tr>
+        <tr wire:key="variant-{{ $variant->id }}" class="hover:bg-slate-50 transition-colors align-middle">
+            <td class="px-5 py-3 text-center text-slate-500 font-medium">{{ $i + 1 }}</td>
+            <td class="px-5 py-3">
+                <span class="font-medium text-slate-700">{{ $variant->name }}</span>
+            </td>
+            <td class="px-5 py-3">
+                <span class="font-medium text-slate-700">{{ $variant->capacity }}</span>
+            </td>
+            <td class="px-5 py-3">
+                <a wire:navigate href="{{ route('input.data', $variant->slug) }}"
+                    class="text-indigo-600 hover:underline">
+                    {{ $variant->slug }}
+                </a>
+            </td>
+            <td class="px-5 py-3">
+                <span class="font-medium text-slate-700">{{ $variant->category->name }}</span>
+            </td>
+            <td class="px-5 py-3 text-slate-500">{{ $variant->created_at->diffForHumans() }}</td>
+            <td class="px-5 py-3 text-right flex items-center">
+                <span wire:click="edit({{ $variant->id }})"
+                    class="text-indigo-600 hover:text-indigo-900 mr-2 cursor-pointer">
+                    <x-edit-svg />
+                </span>
+                <span wire:click="confirm_delete({{ $variant->id }})"
+                    class="text-red-600 hover:text-red-900 cursor-pointer">
+                    <x-delete-svg />
+                </span>
+            </td>
+        </tr>
         @endforeach
     </x-data-table>
     <div class="mt-4 px-5">

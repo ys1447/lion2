@@ -370,12 +370,13 @@ new class extends Component {
                     1 Day Notes
                 </label>
 
-                <textarea wire:model="oneDayValue" id="oneday" rows="4" placeholder="pH / visco / sg ..."
-                    class="w-full text-sm border border-slate-200 rounded-md 
+                <textarea x-data
+                    x-init="$nextTick(() => $el.focus())" wire:model="oneDayValue" id="oneday" rows="4" placeholder="pH / visco / sg ..."
+                    class="w-full text-sm border border-slate-200 rounded-md  
                        focus:outline-none focus:ring-2 focus:ring-indigo-500 p-2"></textarea>
 
                 @error('oneDayValue')
-                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                <span class="text-red-500 text-xs">{{ $message }}</span>
                 @enderror
             </div>
 
@@ -413,7 +414,7 @@ new class extends Component {
                     class="w-full p-2 border border-slate-200 rounded text-sm focus:ring-amber-500"
                     placeholder="Contoh: 500">
                 @error('reworkInitialQty')
-                    <span class="text-red-500 text-[10px]">{{ $message }}</span>
+                <span class="text-red-500 text-[10px]">{{ $message }}</span>
                 @enderror
             </div>
 
@@ -444,7 +445,7 @@ new class extends Component {
                 rows="4" placeholder="Contoh: Terjadi penyimpangan suhu pada tangki mixing..."></textarea>
 
             @error('holdReason')
-                <span class="text-red-500 text-xs font-medium">{{ $message }}</span>
+            <span class="text-red-500 text-xs font-medium">{{ $message }}</span>
             @enderror
 
             <div class="flex justify-end gap-2 mt-2">
@@ -475,35 +476,35 @@ new class extends Component {
 
         {{-- Tombol Reset (Muncul hanya jika ada filter aktif) --}}
         @if ($search || $filterStatus || $fromDate || $toDate)
-            <button wire:click="$set('search', ''); $set('filterStatus', ''); $set('fromDate', ''); $set('toDate', '')"
-                class="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-colors" title="Clear All Filters">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+        <button wire:click="$set('search', ''); $set('filterStatus', ''); $set('fromDate', ''); $set('toDate', '')"
+            class="p-2 text-red-500 hover:bg-red-50 rounded-sm transition-colors" title="Clear All Filters">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
         @endif
     </div>
 
     @if ($search || $filterStatus || $fromDate || $toDate)
-        <button wire:click="exportCsv" wire:loading.attr="disabled"
-            class="flex items-center gap-1 mb-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-bold transition shadow-sm">
+    <button wire:click="exportCsv" wire:loading.attr="disabled"
+        class="flex items-center gap-1 mb-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-bold transition shadow-sm">
 
-            <!-- Ikon Download (Hilang saat loading) -->
-            <svg wire:loading.remove wire:target="exportCsv" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
+        <!-- Ikon Download (Hilang saat loading) -->
+        <svg wire:loading.remove wire:target="exportCsv" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
 
-            <!-- Ikon Loading (Muncul saat proses) -->
-            <svg wire:loading wire:target="exportCsv" class="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                </circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
+        <!-- Ikon Loading (Muncul saat proses) -->
+        <svg wire:loading wire:target="exportCsv" class="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+            </circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
 
-            <span class="tracking-tight">EXPORT</span>
-        </button>
+        <span class="tracking-tight">EXPORT</span>
+    </button>
     @endif
 
     <x-data-table title="QC Inspection Data">
@@ -517,71 +518,71 @@ new class extends Component {
 
                         {{-- Group: Production --}}
                         @if (array_intersect(['batch', 'job_number', 'job_code'], $visibleColumns))
-                            <th
-                                class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left min-w-40">
-                                Production</th>
+                        <th
+                            class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left min-w-40">
+                            Production</th>
                         @endif
 
                         {{-- Group: pH --}}
                         @if (array_intersect(['ph_1', 'ph_2', 'ph_3'], $visibleColumns))
-                            <th
-                                class="px-4 py-4 font-semibold text-blue-600 border-b border-slate-200 text-left bg-blue-50/30">
-                                pH Levels</th>
+                        <th
+                            class="px-4 py-4 font-semibold text-blue-600 border-b border-slate-200 text-left bg-blue-50/30">
+                            pH Levels</th>
                         @endif
 
                         {{-- Group: Viscosity --}}
                         @if (array_intersect(['viscosity_1', 'viscosity_2', 'viscosity_3'], $visibleColumns))
-                            <th
-                                class="px-4 py-4 font-semibold text-emerald-600 border-b border-slate-200 text-left bg-emerald-50/30">
-                                Viscosity</th>
+                        <th
+                            class="px-4 py-4 font-semibold text-emerald-600 border-b border-slate-200 text-left bg-emerald-50/30">
+                            Viscosity</th>
                         @endif
 
 
 
                         @if (in_array('specific_gravity', $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">SG
-                            </th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">SG
+                        </th>
                         @endif
                         @if (in_array('active_ingredient', $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">AI
-                            </th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">AI
+                        </th>
                         @endif
                         @if (in_array('zpt', $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
-                                ZPT
-                            </th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
+                            ZPT
+                        </th>
                         @endif
                         @if (in_array('soap_percentage', $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
-                                Soap</th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
+                            Soap</th>
                         @endif
 
                         @if (in_array('one_day', $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">1D
-                            </th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">1D
+                        </th>
                         @endif
 
                         {{-- Group: Adjustment --}}
                         @if (array_intersect(['rad', 'rgx', 'rxb', 'ryc'], $visibleColumns))
-                            <th
-                                class="px-4 py-4 font-semibold text-purple-600 border-b border-slate-200 text-left bg-purple-50/30">
-                                Adjustment</th>
+                        <th
+                            class="px-4 py-4 font-semibold text-purple-600 border-b border-slate-200 text-left bg-purple-50/30">
+                            Adjustment</th>
                         @endif
 
                         @if (array_intersect(['appearance', 'odor'], $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left">
-                                Organoleptic</th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left">
+                            Organoleptic</th>
                         @endif
 
                         @if (array_intersect(['capacity', 'shift', 'machine_id'], $visibleColumns))
-                            <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
-                                Cap/Machine/Shift</th>
+                        <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center">
+                            Cap/Machine/Shift</th>
                         @endif
 
                         @if (in_array('notes', $visibleColumns))
-                            <th
-                                class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left min-w-45">
-                                Notes</th>
+                        <th
+                            class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-left min-w-45">
+                            Notes</th>
                         @endif
 
                         <th class="px-4 py-4 font-semibold text-slate-500 border-b border-slate-200 text-center w-32">
@@ -598,290 +599,293 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($datas as $i => $data)
-                        <tr wire:key="data-{{ $data->id }}"
-                            class="hover:bg-slate-50 transition-all duration-200 {{ $data->status === 'hold' ? 'bg-red-100 hover:bg-red-200 border-l-4 border-l-red-500' : 'hover:bg-slate-50' }} {{-- Tambahan: Jika Ada Data Out Spec (OOS) tapi tidak di-hold, beri warna oranye muda/merah tipis --}} {{ $data->status !== 'hold' && $data->hasAnyOutSpec() ? 'bg-orange-50 border-l-4 border-l-orange-400' : '' }}">
+                    <tr wire:key="data-{{ $data->id }}"
+                        class="hover:bg-slate-50 transition-all duration-200 {{ $data->status === 'hold' ? 'bg-red-100 hover:bg-red-200 border-l-4 border-l-red-500' : 'hover:bg-slate-50' }} {{-- Tambahan: Jika Ada Data Out Spec (OOS) tapi tidak di-hold, beri warna oranye muda/merah tipis --}} {{ $data->status !== 'hold' && $data->hasAnyOutSpec() ? 'bg-orange-50 border-l-4 border-l-orange-400' : '' }}">
 
-                            <td class="px-4 py-4 text-center text-slate-400 font-medium italic">
-                                {{ ($datas->currentPage() - 1) * $datas->perPage() + $loop->iteration }}</td>
+                        <td class="px-4 py-4 text-center text-slate-400 font-medium italic">
+                            {{ ($datas->currentPage() - 1) * $datas->perPage() + $loop->iteration }}
+                        </td>
 
-                            {{-- Col: Production --}}
-                            @if (array_intersect(['batch', 'job_number', 'job_code'], $visibleColumns))
-                                <td class="px-4 py-4">
-                                    <div class="flex flex-col">
-                                        @if (in_array('batch', $visibleColumns))
-                                            <span class="font-bold text-slate-700 tracking-tight text-[9px]">Batch -
-                                                {{ $data->batch }}</span>
-                                        @endif
-                                        @if (in_array('job_number', $visibleColumns))
-                                            <span class="text-[9px] text-slate-400 font-mono">No Job -
-                                                {{ $data->job_number }}</span>
-                                        @endif
-                                        @if (in_array('job_code', $visibleColumns))
-                                            <span
-                                                class="text-[9px] px-1.5 py-0.5 rounded w-fit mt-1 {{ $data->job_color }}">
-                                                {{ $data->job_code ?? 'N/A' }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </td>
-                            @endif
+                        {{-- Col: Production --}}
+                        @if (array_intersect(['batch', 'job_number', 'job_code'], $visibleColumns))
+                        <td class="px-4 py-4">
+                            <div class="flex flex-col">
+                                @if (in_array('batch', $visibleColumns))
+                                <span class="font-bold text-slate-700 tracking-tight text-[9px]">Batch -
+                                    {{ $data->batch }}</span>
+                                @endif
+                                @if (in_array('job_number', $visibleColumns))
+                                <span class="text-[9px] text-slate-400 font-mono">No Job -
+                                    {{ $data->job_number }}</span>
+                                @endif
+                                @if (in_array('job_code', $visibleColumns))
+                                <span
+                                    class="text-[9px] px-1.5 py-0.5 rounded w-fit mt-1 {{ $data->job_color }}">
+                                    {{ $data->job_code ?? 'N/A' }}
+                                </span>
+                                @endif
+                            </div>
+                        </td>
+                        @endif
 
 
-                            {{-- Col: pH --}}
-                            <td class="px-4 py-4 bg-blue-50/10">
-                                <div class="flex items-center gap-1.5">
-                                    @foreach (['ph_1', 'ph_2', 'ph_3'] as $field)
-                                        @if ($data->$field && in_array($field, $visibleColumns))
-                                            <span
-                                                class="px-2 py-1 rounded shadow-sm font-mono font-bold border 
+                        {{-- Col: pH --}}
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-1.5">
+                                @foreach (['ph_1', 'ph_2', 'ph_3'] as $field)
+                                @if ($data->$field && in_array($field, $visibleColumns))
+                                <span
+                                    class="px-2 py-1 font-mono font-bold 
                                                 {{-- Logika Merah jika OOS --}}
                                                 {{ $data->isOutSpec($field)
                                                     ? 'bg-red-600 text-white border-red-700 animate-pulse'
-                                                    : 'bg-white border-blue-100 text-blue-700' }}">
-                                                {{ $data->$field }}
-                                            </span>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </td>
+                                                    : 'text-blue-700' }}">
+                                    {{ $data->$field }}
+                                </span>
+                                @endif
+                                @endforeach
+                            </div>
+                        </td>
 
-                            {{-- Col: Viscosity --}}
-                            @if (array_intersect(['viscosity_1', 'viscosity_2', 'viscosity_3'], $visibleColumns))
-                                <td class="px-4 py-4 bg-emerald-50/10">
-                                    <div class="flex items-center gap-1.5">
-                                        @foreach (['viscosity_1', 'viscosity_2', 'viscosity_3'] as $field)
-                                            @if ($data->$field && in_array($field, $visibleColumns))
-                                                <span
-                                                    class="px-2 py-1 rounded shadow-sm font-mono font-bold border transition-all duration-300
+                        {{-- Col: Viscosity --}}
+                        @if (array_intersect(['viscosity_1', 'viscosity_2', 'viscosity_3'], $visibleColumns))
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-1.5">
+                                @foreach (['viscosity_1', 'viscosity_2', 'viscosity_3'] as $field)
+                                @if ($data->$field && in_array($field, $visibleColumns))
+                                <span
+                                    class="px-2 py-1 font-mono font-bold transition-all duration-300
                                                     {{ $data->isOutSpec($field)
                                                         ? 'bg-red-600 text-white border-red-700 animate-pulse'
-                                                        : 'bg-white border-emerald-100 text-emerald-700' }}">
+                                                        : 'text-emerald-700' }}">
 
-                                                    {{ number_format((float) $data->$field, 0, ',', '.') }}
-                                                </span>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </td>
-                            @endif
+                                    {{ number_format((float) $data->$field, 0, ',', '.') }}
+                                </span>
+                                @endif
+                                @endforeach
+                            </div>
+                        </td>
+                        @endif
 
 
 
-                            @if (in_array('specific_gravity', $visibleColumns))
-                                <td
-                                    class="px-4 py-4 text-center font-mono 
+                        @if (in_array('specific_gravity', $visibleColumns))
+                        <td
+                            class="px-4 py-4 text-center font-mono 
                                     {{ $data->isOutSpec('specific_gravity')
                                         ? 'bg-red-600 text-white border-red-700 animate-pulse'
                                         : 'text-slate-600' }}">
-                                    {{ $data->specific_gravity ?? '-' }}
-                                </td>
-                            @endif
+                            {{ $data->specific_gravity ?? '-' }}
+                        </td>
+                        @endif
 
-                            @if (in_array('active_ingredient', $visibleColumns))
-                                <td
-                                    class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('active_ingredient')
+                        @if (in_array('active_ingredient', $visibleColumns))
+                        <td
+                            class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('active_ingredient')
                                         ? 'bg-red-600 text-white border-red-700 animate-pulse'
                                         : 'text-slate-600' }}">
-                                    {{ $data->active_ingredient ?? '-' }}</td>
-                            @endif
+                            {{ $data->active_ingredient ?? '-' }}
+                        </td>
+                        @endif
 
-                            @if (in_array('zpt', $visibleColumns))
-                                <td
-                                    class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('zpt') ? 'bg-red-600 text-white border-red-700 animate-pulse' : 'text-slate-600' }}">
-                                    {{ $data->zpt ?? '-' }}
-                                </td>
-                            @endif
-                            @if (in_array('soap_percentage', $visibleColumns))
-                                <td
-                                    class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('soap_percentage')
+                        @if (in_array('zpt', $visibleColumns))
+                        <td
+                            class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('zpt') ? 'bg-red-600 text-white border-red-700 animate-pulse' : 'text-slate-600' }}">
+                            {{ $data->zpt ?? '-' }}
+                        </td>
+                        @endif
+                        @if (in_array('soap_percentage', $visibleColumns))
+                        <td
+                            class="px-4 py-4 text-center font-mono text-slate-600 {{ $data->isOutSpec('soap_percentage')
                                         ? 'bg-red-600 text-white border-red-700 animate-pulse'
                                         : 'text-slate-600' }}">
-                                    {{ $data->soap_percentage ?? '-' }}</td>
-                            @endif
+                            {{ $data->soap_percentage ?? '-' }}
+                        </td>
+                        @endif
 
-                            @if (in_array('one_day', $visibleColumns))
-                                <td class="px-4 py-4 text-center font-mono text-slate-600 w-32">
+                        @if (in_array('one_day', $visibleColumns))
+                        <td class="px-4 py-4 text-center font-mono text-slate-600 w-32">
 
-                                    <button wire:click="openOneDayModal({{ $data->id }})"
-                                        class="px-2 py-1 text-[10px] rounded-sm transition-all duration-150 cursor-pointer {{ $data->oneday ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm' }}">
-                                        {{ $data->oneday ? 'Edit' : 'Input' }}
-                                    </button>
+                            <button wire:click="openOneDayModal({{ $data->id }})"
+                                class="px-2 py-1 text-[10px] rounded-sm transition-all duration-150 cursor-pointer {{ $data->oneday ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm' }}">
+                                {{ $data->oneday ? 'Edit' : 'Input' }}
+                            </button>
 
-                                    <div class="mt-1 text-[10px] text-slate-500 italic">
-                                        {{ $data->oneday }}
-                                    </div>
+                            <div class="mt-1 text-[10px] text-slate-500 italic">
+                                {{ $data->oneday }}
+                            </div>
 
-                                </td>
-                            @endif
+                        </td>
+                        @endif
 
-                            {{-- Col: Adjustment --}}
-                            @if (array_intersect(['rad', 'rgx', 'rxb', 'ryc'], $visibleColumns))
-                                <td class="px-4 py-4 bg-purple-50/10">
-                                    <div class="flex gap-1 text-[10px] font-mono">
-                                        @foreach (['rad', 'rgx', 'rxb', 'ryc'] as $field)
-                                            @if (in_array($field, $visibleColumns))
-                                                <span
-                                                    class="text-purple-400 @if (!$loop->first) ml-1 @endif">{{ ucfirst($field) }}:</span>
-                                                <span
-                                                    class="text-purple-700 font-bold">{{ $data->$field ?? '-' }}</span>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </td>
-                            @endif
+                        {{-- Col: Adjustment --}}
+                        @if (array_intersect(['rad', 'rgx', 'rxb', 'ryc'], $visibleColumns))
+                        <td class="px-4 py-4 bg-purple-50/10">
+                            <div class="flex gap-1 text-[10px] font-mono">
+                                @foreach (['rad', 'rgx', 'rxb', 'ryc'] as $field)
+                                @if (in_array($field, $visibleColumns))
+                                <span
+                                    class="text-purple-400 @if (!$loop->first) ml-1 @endif">{{ ucfirst($field) }}:</span>
+                                <span
+                                    class="text-purple-700 font-bold">{{ $data->$field ?? '-' }}</span>
+                                @endif
+                                @endforeach
+                            </div>
+                        </td>
+                        @endif
 
-                            {{-- Col: Organoleptic --}}
-                            @if (array_intersect(['appearance', 'odor'], $visibleColumns))
-                                <td class="px-4 py-4">
-                                    <div class="flex flex-col gap-0.5 text-[10px]">
-                                        @if (in_array('appearance', $visibleColumns))
-                                            <div class="flex justify-between gap-2 text-slate-500"><span>App:</span>
-                                                <span
-                                                    class="text-slate-700 font-medium">{{ $data->appearance ?? '-' }}</span>
-                                            </div>
-                                        @endif
-                                        @if (in_array('odor', $visibleColumns))
-                                            <div class="flex justify-between gap-2 text-slate-500"><span>Odor:</span>
-                                                <span
-                                                    class="text-slate-700 font-medium">{{ $data->odor ?? '-' }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </td>
-                            @endif
-
-                            @if (array_intersect(['capacity', 'shift', 'machine_id'], $visibleColumns))
-                                <td class="px-4 py-4 text-center">
-                                    {{-- Kapasitas --}}
-                                    @if (in_array('capacity', $visibleColumns))
-                                        <span class="font-bold text-slate-700">
-                                            {{ number_format((float) $data->variant->capacity, 0, ',', '.') }}
-                                        </span>
-                                    @endif
-
-                                    {{-- Nama Mesin (Baru) --}}
-                                    @if (in_array('machine_id', $visibleColumns))
-                                        <div
-                                            class="text-[10px] font-extrabold text-indigo-600 mt-1 uppercase leading-none">
-                                            {{ $data->machine->name ?? 'No Machine' }} -
-                                            {{ $data->machine->category->name }}
-                                        </div>
-                                    @endif
-
-                                    {{-- Shift --}}
-                                    @if (in_array('shift', $visibleColumns))
-                                        <div
-                                            class="text-[9px] font-bold text-white bg-slate-400 rounded-full px-1 mt-1 uppercase tracking-tighter inline-block">
-                                            {{ $data->shift ?? '-' }}
-                                        </div>
-                                    @endif
-                                </td>
-                            @endif
-
-                            @if (in_array('notes', $visibleColumns))
-                                <td
-                                    class="px-4 py-4 text-slate-500 text-[10px] leading-relaxed whitespace-normal italic">
-                                    {{ \Str::limit($data->notes, 100) ?? '-' }}
-                                </td>
-                            @endif
-
-                            <td class="px-4 py-4 text-center">
-                                <div class="inline-flex p-1 bg-slate-100 rounded-sm shadow-inner gap-1">
-
-                                    @if ($data->status !== 'hold')
-                                        <button wire:click="confirmHold({{ $data->id }})" {{-- Logic Disable --}}
-                                            @if ($data->status === 'hold') disabled @endif
-                                            class="p-1 rounded-sm text-slate-400 hover:bg-red-500 hover:text-white hover:shadow-sm transition-all duration-50"
-                                            title="Hold">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M18.36 6.64a9 9 0 11-12.73 0M12 7v5m0 3h.01" />
-                                            </svg>
-                                        </button>
-                                    @endif
-
-                                    {{-- Tombol Rework/Remix --}}
-                                    {{-- Sembunyikan jika sudah ada di list rework atau sedang di-hold --}}
-                                    @if ($data->status !== 'active' && !$data->reworkLogs()->where('status', 'active')->exists())
-                                        <button wire:click="confirmRework({{ $data->id }})"
-                                            class="p-1 rounded-sm text-slate-400 hover:bg-amber-500 hover:text-white transition-all"
-                                            title="Send to Rework">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                        </button>
-                                    @endif
+                        {{-- Col: Organoleptic --}}
+                        @if (array_intersect(['appearance', 'odor'], $visibleColumns))
+                        <td class="px-4 py-4">
+                            <div class="flex flex-col gap-0.5 text-[10px]">
+                                @if (in_array('appearance', $visibleColumns))
+                                <div class="flex justify-between gap-2 text-slate-500"><span>App:</span>
+                                    <span
+                                        class="text-slate-700 font-medium">{{ $data->appearance ?? '-' }}</span>
                                 </div>
-                            </td>
-
-                            {{-- Inspector & Date (Always Visible) --}}
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <div
-                                        class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-[10px]">
-                                        {{ substr($data->user->name ?? 'U', 0, 1) }}
-                                    </div>
-                                    <div class="flex flex-col text-[10px]">
-                                        <span
-                                            class="text-slate-700 font-semibold">{{ $data->user->name ?? 'Unknown' }}</span>
-                                        <span
-                                            class="text-slate-400 font-mono">{{ $data->created_at->format('d/m/y H:i') }}</span>
-                                    </div>
+                                @endif
+                                @if (in_array('odor', $visibleColumns))
+                                <div class="flex justify-between gap-2 text-slate-500"><span>Odor:</span>
+                                    <span
+                                        class="text-slate-700 font-medium">{{ $data->odor ?? '-' }}</span>
                                 </div>
-                            </td>
+                                @endif
+                            </div>
+                        </td>
+                        @endif
 
-                            {{-- Actions (Always Visible) --}}
-                            <td
-                                class="px-4 py-4 sticky right-0 bg-white/95 backdrop-blur-sm border-l-2 border-slate-100 {{ $data->status === 'hold' ? 'border-l-4 border-l-red-500' : '' }}">
-                                <div class="flex items-center justify-center">
-                                    {{-- Button CO Job (Disamakan ukurannya dengan Edit/Delete) --}}
-                                    <button wire:click="toggleCoJob({{ $data->id }})"
-                                        class="flex items-center justify-center focus:outline-none transition-all duration-50
+                        @if (array_intersect(['capacity', 'shift', 'machine_id'], $visibleColumns))
+                        <td class="px-4 py-4 text-center">
+                            {{-- Kapasitas --}}
+                            @if (in_array('capacity', $visibleColumns))
+                            <span class="font-bold text-slate-700">
+                                {{ number_format((float) $data->variant->capacity, 0, ',', '.') }}
+                            </span>
+                            @endif
+
+                            {{-- Nama Mesin (Baru) --}}
+                            @if (in_array('machine_id', $visibleColumns))
+                            <div
+                                class="text-[10px] font-extrabold text-indigo-600 mt-1 uppercase leading-none">
+                                {{ $data->machine->name ?? 'No Machine' }} -
+                                {{ $data->machine->category->name }}
+                            </div>
+                            @endif
+
+                            {{-- Shift --}}
+                            @if (in_array('shift', $visibleColumns))
+                            <div
+                                class="text-[9px] font-bold text-white bg-slate-400 rounded-full px-1 mt-1 uppercase tracking-tighter inline-block">
+                                {{ $data->shift ?? '-' }}
+                            </div>
+                            @endif
+                        </td>
+                        @endif
+
+                        @if (in_array('notes', $visibleColumns))
+                        <td
+                            class="px-4 py-4 text-slate-500 text-[10px] leading-relaxed whitespace-normal italic">
+                            {{ \Str::limit($data->notes, 100) ?? '-' }}
+                        </td>
+                        @endif
+
+                        <td class="px-4 py-4 text-center">
+                            <div class="inline-flex p-1 bg-slate-100 rounded-sm shadow-inner gap-1">
+
+                                @if ($data->status !== 'hold')
+                                <button wire:click="confirmHold({{ $data->id }})" {{-- Logic Disable --}}
+                                    @if ($data->status === 'hold') disabled @endif
+                                    class="p-1 rounded-sm text-slate-400 hover:bg-red-500 hover:text-white hover:shadow-sm transition-all duration-50"
+                                    title="Hold">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.36 6.64a9 9 0 11-12.73 0M12 7v5m0 3h.01" />
+                                    </svg>
+                                </button>
+                                @endif
+
+                                {{-- Tombol Rework/Remix --}}
+                                {{-- Sembunyikan jika sudah ada di list rework atau sedang di-hold --}}
+                                @if ($data->status !== 'active' && !$data->reworkLogs()->where('status', 'active')->exists())
+                                <button wire:click="confirmRework({{ $data->id }})"
+                                    class="p-1 rounded-sm text-slate-400 hover:bg-amber-500 hover:text-white transition-all"
+                                    title="Send to Rework">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </button>
+                                @endif
+                            </div>
+                        </td>
+
+                        {{-- Inspector & Date (Always Visible) --}}
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-[10px]">
+                                    {{ substr($data->user->name ?? 'U', 0, 1) }}
+                                </div>
+                                <div class="flex flex-col text-[10px]">
+                                    <span
+                                        class="text-slate-700 font-semibold">{{ $data->user->name ?? 'Unknown' }}</span>
+                                    <span
+                                        class="text-slate-400 font-mono">{{ $data->created_at->format('d/m/y H:i') }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        {{-- Actions (Always Visible) --}}
+                        <td
+                            class="px-4 py-4 sticky right-0 bg-white/95 backdrop-blur-sm border-l-2 border-slate-100 {{ $data->status === 'hold' ? 'border-l-4 border-l-red-500' : '' }}">
+                            <div class="flex items-center justify-center">
+                                {{-- Button CO Job (Disamakan ukurannya dengan Edit/Delete) --}}
+                                <button wire:click="toggleCoJob({{ $data->id }})"
+                                    class="flex items-center justify-center focus:outline-none transition-all duration-50
                                         {{-- Kotak Luar --}}
                                         w-4 h-4 rounded-[3px] border mr-2 {{-- rounded kecil agar tetap proporsional --}}
                                         {{ $data->co_job
                                             ? 'bg-emerald-500 border-emerald-600 text-white shadow-sm'
                                             : 'bg-white border-slate-300 text-transparent hover:border-indigo-400' }}">
 
-                                        {{-- Icon Centang di dalam Kotak --}}
-                                        <svg class="w-2.5 h-2.5 " fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" stroke-width="5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </button>
+                                    {{-- Icon Centang di dalam Kotak --}}
+                                    <svg class="w-2.5 h-2.5 " fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" stroke-width="5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </button>
 
-                                    <span wire:click="edit({{ $data->id }})"
-                                        class="text-indigo-600 hover:text-indigo-900 cursor-pointer">
-                                        <x-edit-svg />
-                                    </span>
+                                <span wire:click="edit({{ $data->id }})"
+                                    class="text-indigo-600 hover:text-indigo-900 cursor-pointer">
+                                    <x-edit-svg />
+                                </span>
 
-                                    <span wire:click="confirm_delete({{ $data->id }})"
-                                        class="text-red-600 hover:text-red-900 cursor-pointer">
-                                        <x-delete-svg />
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
+                                <span wire:click="confirm_delete({{ $data->id }})"
+                                    class="text-red-600 hover:text-red-900 cursor-pointer">
+                                    <x-delete-svg />
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="20" class="px-5 py-20 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <div class="p-4 bg-slate-50 rounded-full">
-                                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <span class="text-slate-400 italic text-sm font-medium">No inspection records
-                                        found</span>
+                    <tr>
+                        <td colspan="20" class="px-5 py-20 text-center">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <div class="p-4 bg-slate-50 rounded-full">
+                                    <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
+                                        </path>
+                                    </svg>
                                 </div>
-                            </td>
-                        </tr>
+                                <span class="text-slate-400 italic text-sm font-medium">No inspection records
+                                    found</span>
+                            </div>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>

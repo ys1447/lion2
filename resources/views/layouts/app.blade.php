@@ -80,6 +80,7 @@
 </head>
 
 <body class="h-full overflow-hidden flex flex-col">
+    
     <div>
         <div x-data="{
             sidebarOpen: localStorage.getItem('sidebarOpen') === 'false' ? false : true,
@@ -112,7 +113,8 @@
         </div>
     </div>
 
-
+    
+    
     @livewireScripts
 
     <script data-navigate-once>
