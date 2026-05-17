@@ -2,6 +2,7 @@
 
 use Livewire\Component;
 use App\Models\Variant;
+use Livewire\Attributes\Title;
 
 new class extends Component {
     
@@ -11,6 +12,11 @@ new class extends Component {
     {
         $this->slug = $slug;
         $this->variant = Variant::where('slug', $slug)->firstOrFail();
+    }
+
+    public function render()
+    {
+        return $this->view()->title($this->variant->name);
     }
 }
 ?>

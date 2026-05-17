@@ -1,8 +1,9 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\Title;
 
-new class extends Component
+new #[Title('List Notification')] class extends Component
 {
     //
 };

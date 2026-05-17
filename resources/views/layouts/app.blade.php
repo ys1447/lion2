@@ -6,19 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{{ $title ?? config('app.name') }}</title>
-    <link rel="icon"
-        href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAAAAB3u9SAAAAAnRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN798zQAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAA0SURBVAjXY2SgCHACInYGCpAEYSADpIEMkAYyQBrIQInh/38wA6SBDJAGMkAayABpIAMDgwAAsmILmS6S998AAAAASUVORK5CYII=">
+    <link rel="icon" type="image/png" href="{{ asset('img/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @livewireStyles
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
 
     <style>
+        @keyframes loading-bar {
+            0% {
+                width: 0%;
+                transform: translateX(-20%);
+            }
+
+            50% {
+                width: 70%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        .animate-loading-bar {
+            animation: loading-bar 1s ease-in-out infinite;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -80,13 +91,30 @@
 </head>
 
 <body class="h-full overflow-hidden flex flex-col">
-    
+
     <div>
         <div x-data="{
             sidebarOpen: localStorage.getItem('sidebarOpen') === 'false' ? false : true,
             mobileSidebar: false,
-            dropdownOpen: false
-        }" x-init="$watch('sidebarOpen', value => localStorage.setItem('sidebarOpen', value))" class="flex h-screen overflow-hidden">
+            dropdownOpen: false,
+            pageLoading: false
+        }" x-init="
+        $watch('sidebarOpen', value => localStorage.setItem('sidebarOpen', value)) 
+        
+        window.addEventListener('livewire:navigate', () => {
+        pageLoading = true
+        })
+
+        window.addEventListener('livewire:navigated', () => {
+        setTimeout(() => {
+            pageLoading = false
+        }, 150)
+        })
+        
+        "
+
+            class="flex h-screen overflow-hidden">
+
 
             <!-- MOBILE OVERLAY -->
             <div x-show="mobileSidebar" x-transition:enter="transition ease-out duration-300"
@@ -97,24 +125,49 @@
             </div>
 
             <!-- SIDEBAR -->
-            <x-aside-bar></x-aside-bar>
+            <x-aside-bar />
 
-            <!-- MAIN AREA -->
-            <div class="flex-1 flex flex-col overflow-hidden">
 
-                <!-- NAVBAR -->
-                <x-navbar></x-navbar>
+            <div
+                class="flex-1 overflow-y-auto relative">
 
-                {{-- Main Content --}}
+                <!-- Loading Overlay -->
+                <div
+                    x-show="pageLoading"
+                    x-transition.opacity.duration.50ms
+                    class="absolute inset-0 z-40 flex items-center justify-center bg-white/30 backdrop-blur-[1px]"
+                    style="display:none;">
+                    <div class="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/90 shadow-xl border border-slate-200">
+                        <div class="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
 
-                {{ $slot }}
+                        <span class="text-sm font-medium text-slate-700">
+                            Loading...
+                        </span>
+                    </div>
+                </div>
+
+                {{-- FIXED NAVBAR --}}
+
+                <div class="sticky top-0 z-30">
+                    <x-navbar />
+                </div>
+
+
+                {{-- SCROLLABLE CONTENT --}}
+                <div
+                    :class="pageLoading ? 'opacity-60' : 'opacity-100'"
+                    class="transition-opacity duration-300">
+
+                    {{ $slot }}
+
+                </div>
 
             </div>
         </div>
     </div>
 
-    
-    
+
+
     @livewireScripts
 
     <script data-navigate-once>
@@ -248,19 +301,16 @@
                     showConfirmButton: false
                 });
             });
-        });
 
-        Livewire.on('alert-error', (data) => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validasi Gagal!',
-                text: data.message,
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Periksa Kembali'
+            Livewire.on('alert-error', (data) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal!',
+                    text: data.message,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Periksa Kembali'
+                });
             });
-        });
-
-        document.addEventListener('livewire:init', () => {
 
             Livewire.on('confirm-delete', (data) => {
                 Swal.fire({
@@ -278,32 +328,7 @@
                     }
                 });
             });
-
         });
-
-        @if (session()->has('welcome'))
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 10000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            });
-
-            Toast.fire({
-                icon: 'success',
-                title: '{{ session('welcome') }}',
-                background: '#ffffff',
-                color: '#1e293b',
-                customClass: {
-                    popup: 'rounded-sm border-l-4 border-indigo-500 shadow-lg',
-                }
-            });
-        @endif
     </script>
 
 

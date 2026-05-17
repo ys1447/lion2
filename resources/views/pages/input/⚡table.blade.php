@@ -464,7 +464,7 @@ new class extends Component {
 
 
     <div class="flex gap-2">
-        <x-search model='search' placeholder="Search Batch, Job, or Machine" />
+        <x-search model='search' placeholder="Search Batch, Job, Machine, Notes (TRIAL RND)" />
         <x-filter model="filterStatus">
             <option value="">All Status</option>
             <option value="hold">On Hold ⚠️</option>
@@ -600,7 +600,7 @@ new class extends Component {
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($datas as $i => $data)
                     <tr wire:key="data-{{ $data->id }}"
-                        class="hover:bg-slate-50 transition-all duration-200 {{ $data->status === 'hold' ? 'bg-red-100 hover:bg-red-200 border-l-4 border-l-red-500' : 'hover:bg-slate-50' }} {{-- Tambahan: Jika Ada Data Out Spec (OOS) tapi tidak di-hold, beri warna oranye muda/merah tipis --}} {{ $data->status !== 'hold' && $data->hasAnyOutSpec() ? 'bg-orange-50 border-l-4 border-l-orange-400' : '' }}">
+                        class="hover:bg-slate-200 {{ $data->status === 'hold' ? 'bg-red-100 hover:bg-red-200 border-l-4 border-l-red-500' : 'hover:bg-slate-50' }} {{-- Tambahan: Jika Ada Data Out Spec (OOS) tapi tidak di-hold, beri warna oranye muda/merah tipis --}} {{ $data->status !== 'hold' && $data->hasAnyOutSpec() ? 'bg-orange-50 border-l-4 border-l-orange-400' : '' }}">
 
                         <td class="px-4 py-4 text-center text-slate-400 font-medium italic">
                             {{ ($datas->currentPage() - 1) * $datas->perPage() + $loop->iteration }}

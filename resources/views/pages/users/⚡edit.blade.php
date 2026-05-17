@@ -2,11 +2,14 @@
 
 use Livewire\Component;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
 
 new class extends Component {
     public $userId;
     public $name, $username, $role;
     public $show = false;
+    public $password, $password_confirmation;
 
     protected $listeners = ['edit-user' => 'loadUser'];
 
@@ -20,6 +23,9 @@ new class extends Component {
         $this->name = $user->name;
         $this->username = $user->username;
         $this->role = $user->role;
+        // reset password field
+        $this->password = '';
+        $this->password_confirmation = '';
     }
 
     public function cancel()
@@ -33,15 +39,26 @@ new class extends Component {
             'name' => 'required',
             'username' => 'required|unique:users,username,' . $this->userId,
             'role' => 'required',
+
+            // password optional
+            'password' => 'nullable|min:4|confirmed',
         ]);
 
-        User::find($this->userId)->update([
+        $data = [
             'name' => $this->name,
             'username' => $this->username,
             'role' => $this->role,
-        ]);
+        ];
+
+        // hanya update password kalau diisi
+        if ($this->password) {
+            $data['password'] = Hash::make($this->password);
+        }
+
+        User::find($this->userId)->update($data);
 
         $this->dispatch('user-updated');
+
         $this->show = false;
     }
 };
@@ -53,6 +70,17 @@ new class extends Component {
         <form wire:submit.prevent="update">
             <x-form-input wire:model="name" label="Name" forId='name' />
             <x-form-input wire:model="username" label="Username" forId='username' />
+            <x-form-input
+                wire:model="password"
+                label="Password Baru"
+                forId="password"
+                type="password" />
+
+            <x-form-input
+                wire:model="password_confirmation"
+                label="Konfirmasi Password"
+                forId="password_confirmation"
+                type="password" />
 
             <x-select-form label="Role" model="role" :options="[
                 'admin' => 'Admin',

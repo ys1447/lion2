@@ -1,8 +1,9 @@
 <?php
     // 
 use Livewire\Component;
+use Livewire\Attributes\Title;
 
-new class extends Component {};
+new #[Title('Users')] class extends Component {};
 ?>
 
 <div class="flex-1 p-4 lg:p-6 bg-slate-50 h-screen overflow-y-auto">

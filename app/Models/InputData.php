@@ -120,9 +120,10 @@ class InputData extends Model
         if (empty($term)) return $query;
 
         return $query->where(function ($q) use ($term) {
-            // 1. Cari langsung di kolom batch dan job_number
+            // 1. Cari langsung di kolom batch dan job_number dan notes
             $q->where('batch', 'like', "%{$term}%")
-                ->orWhere('job_number', 'like', "%{$term}%");
+                ->orWhere('job_number', 'like', "%{$term}%")
+                ->orWhere('notes', 'like', "%{$term}%");
 
             // 2/ variant deleted
 
@@ -159,28 +160,44 @@ class InputData extends Model
 
     // App\Models\InputData.php
 
+    protected $standardsCache = null;
+    protected $outSpecCache = [];
+
     public function isOutSpec($fieldName)
     {
-        $value = $this->$fieldName;
-
-        // SOLUSI: Jika null ATAU string kosong ATAU hanya berisi spasi, abaikan (bukan OOS)
-        if (is_null($value) || trim((string)$value) === '') {
-            return false;
+        // Cache hasil akhir agar field sama tidak dihitung ulang
+        if (isset($this->outSpecCache[$fieldName])) {
+            return $this->outSpecCache[$fieldName];
         }
 
-        $standard = $this->variant->standards->where('field_name', $fieldName)->first();
+        $value = $this->$fieldName;
 
-        if (!$standard) return false;
+        if (is_null($value) || trim((string) $value) === '') {
+            return $this->outSpecCache[$fieldName] = false;
+        }
+
+        // Cache standards sekali saja per row
+        if ($this->standardsCache === null) {
+            $this->standardsCache = $this->variant
+                ->standards
+                ->keyBy('field_name');
+        }
+
+        $standard = $this->standardsCache[$fieldName] ?? null;
+
+        if (!$standard) {
+            return $this->outSpecCache[$fieldName] = false;
+        }
 
         $val = (float) $value;
         $min = $standard->min_value;
         $max = $standard->max_value;
 
-        // Pengecekan range
-        $isTooLow = (!is_null($min) && $val < (float)$min);
-        $isTooHigh = (!is_null($max) && $val > (float)$max);
+        $isTooLow = !is_null($min) && $val < (float) $min;
+        $isTooHigh = !is_null($max) && $val > (float) $max;
 
-        return $isTooLow || $isTooHigh;
+        return $this->outSpecCache[$fieldName] =
+            ($isTooLow || $isTooHigh);
     }
 
     /**

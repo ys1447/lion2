@@ -2,6 +2,7 @@
 
 use Livewire\Component;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 new class extends Component {
     public $name, $username, $password, $role;

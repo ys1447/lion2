@@ -2,8 +2,11 @@
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Title;
 
-new class extends Component {};
+
+
+new #[Title('Dashboard')]class extends Component {};
 ?>
 
 <!-- Pastikan pembungkus paling luar memiliki h-screen dan overflow-hidden -->
